@@ -1,0 +1,20 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Multiply
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+
+struct VecMatPair {
+    float3 Pos;
+    float4x4 Mat;
+};
+RWStructuredBuffer<float> DataBuffer;
+
+[numthreads(16,1,1)]
+void Multiply(uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+
+    DataBuffer[id.x] = float3(mul(DataBuffer[id.x].mat, float4(DataBuffer[id.x].Pos, 1.0f)).xyz);
+}
