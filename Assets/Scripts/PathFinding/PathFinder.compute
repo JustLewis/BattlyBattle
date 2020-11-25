@@ -1,14 +1,15 @@
 ﻿#pragma kernel CSPath
 
-uniform float2 Direction;
-uniform float2 EndPos;
-uniform float2 StartPos;
+uniform float3 Direction;
+uniform float3 EndPos;
+uniform float3 StartPos;
 
 //uniform int Forsight; //look ahead for obsticles.
 
 RWStructuredBuffer<float> NodeScore; //write score to buffer.
 StructuredBuffer<float3> NodePos; //Position of node.
 StructuredBuffer<int> NodeIndex; //Position of node.
+StructuredBuffer<int> NodeFaceID; //Position of node.
 
 [numthreads(1,1,1)]
 void CSPath(uint3 id : SV_DispatchThreadID)
