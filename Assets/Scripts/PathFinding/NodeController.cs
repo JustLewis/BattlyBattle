@@ -20,14 +20,12 @@ public class NodeController : MonoBehaviour
     private ComputeBuffer ScoreBuffer;
     private ComputeBuffer PositionBuffer;
     private ComputeBuffer IndexBuffer;
-    private ComputeBuffer FaceBuffer;
 
     private Vector3 StartPos;
     private Vector3 EndPos;
 
     private Vector3[] BufferNodePositionData;
     private Vector3Int[] BufferNodeIndexData;
-    private int[] BufferNodeFaceData;
     private float[] ScoreData;
     private int Kernal;
 
@@ -63,7 +61,7 @@ public class NodeController : MonoBehaviour
         }
         if(bIterateDispatch)
         { 
-            bIterateDispatch = true;
+            bIterateDispatch = false;
             IterateDispatch();
         }
     }
@@ -79,38 +77,34 @@ public class NodeController : MonoBehaviour
     void DoSpawn()
     {
         BufferNodePositionData = ActiveNavmesh.vertices; //contains position data for each vertex.
-        Debug.Log("Number of element? " + ActiveNavmesh.indices.Length);
-        BufferNodeFaceData = new int[ActiveNavmesh.indices.Length / 3]; //give each face an ID. 0 1 2 3 etc.
-        BufferNodeIndexData = new Vector3Int[BufferNodeFaceData.Length]; //Each face is made up of 3 indices, each pointing to point to a vertex. SO this vec3 stores them.
-
-        for (int i = 0; i < BufferNodeFaceData.Length; i ++)
+        Debug.Log("Number of elements " + ActiveNavmesh.indices.Length + ". Number of faces" + ActiveNavmesh.indices.Length / 3);
+        BufferNodeIndexData = new Vector3Int[ActiveNavmesh.indices.Length / 3]; //Each face is made up of 3 indices, each pointing to point to a vertex. SO this vec3 stores them.
+        int i;
+        for (i = 0; i < BufferNodeIndexData.Length; i ++)
         {
-            BufferNodeFaceData[i] = i; //face ID number
             BufferNodeIndexData[i].x = ActiveNavmesh.indices[i * 3]; //point 1 of triangle for face
             BufferNodeIndexData[i].y = ActiveNavmesh.indices[i * 3 + 1]; //point 2 of triangle for face
             BufferNodeIndexData[i].z = ActiveNavmesh.indices[i * 3 + 2]; //point 3 of triangle for face
         }
 
 
-        ScoreData = new float[BufferNodeFaceData.Length];
+        ScoreData = new float[BufferNodePositionData.Length];
+        
 
-        for (int i = 0; i < BufferNodeFaceData.Length; i++)
+        for (i = 0; i < BufferNodePositionData.Length; i++)
         {
             ScoreData[i] = float.MaxValue;
             GameObject Obj = Instantiate(node, transform, false);
             Obj.transform.position = BufferNodePositionData[i];
             GridNode ObjNode = Obj.GetComponent<GridNode>();
-            Debug.Log("Creating Object number " + i);
         }
+        Debug.Log("Number of nodes" + i);
 
         PositionBuffer = new ComputeBuffer(BufferNodePositionData.Length, 3 * sizeof(float));
         PositionBuffer.SetData(BufferNodePositionData);
 
         IndexBuffer = new ComputeBuffer(BufferNodeIndexData.Length, 3 * sizeof(int));
         IndexBuffer.SetData(BufferNodeIndexData);
-
-        FaceBuffer = new ComputeBuffer(BufferNodeFaceData.Length, sizeof(int));
-        FaceBuffer.SetData(BufferNodeFaceData);
 
         ScoreBuffer = new ComputeBuffer(ScoreData.Length, sizeof(float));
         ScoreBuffer.SetData(ScoreData);
@@ -119,7 +113,6 @@ public class NodeController : MonoBehaviour
         PathFindingComputeShader.SetBuffer(Kernal, "NodePos", PositionBuffer);
         PathFindingComputeShader.SetBuffer(Kernal, "NodeIndex", IndexBuffer);
         PathFindingComputeShader.SetBuffer(Kernal, "NodeScore", ScoreBuffer);
-        PathFindingComputeShader.SetBuffer(Kernal, "NodeFaceID", FaceBuffer);
 
         float[] Pos = new float[3] { 0, 0, 0};
         StartPos = Vector3.zero;
@@ -138,11 +131,13 @@ public class NodeController : MonoBehaviour
         Pos[1] = Direction.y;
         Pos[2] = Direction.z;
         PathFindingComputeShader.SetFloats("Direction", Pos[0], Pos[1], Pos[2]);
+        
+        PathFindingComputeShader.SetFloats("MaxDistance", Vector3.Distance(StartPos, EndPos));
     }
 
     public void DispatchComputeShader()
     {
-        PathFindingComputeShader.Dispatch(Kernal, ActiveNavmesh.indices.Length, 1, 1);
+        PathFindingComputeShader.Dispatch(Kernal, ActiveNavmesh.indices.Length, 1, 1); 
 
         NodeList.AddRange(GetComponentsInChildren<Node>());
         ScoreBuffer.GetData(ScoreData);
@@ -184,6 +179,8 @@ public class NodeController : MonoBehaviour
         Positions[1] = TheDirection.y;
         Positions[2] = TheDirection.z;
         PathFindingComputeShader.SetFloats("Direction", Positions);
+
+        PathFindingComputeShader.SetFloats("MaxDistance", Vector3.Distance(StartPos, EndPos));
     }
 }
 

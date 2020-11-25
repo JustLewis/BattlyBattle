@@ -51,6 +51,7 @@ public class Node : MonoBehaviour
         float BlueAmount = 1 - RedAmount;
 
         GetComponent<Renderer>().material.SetColor("_Color", Color.red * RedAmount + Color.green * BlueAmount);
+        Debug.Log("Desire is " + Desire);
     }
 
     public void SetAsStartPosition()

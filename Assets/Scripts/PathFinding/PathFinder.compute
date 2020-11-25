@@ -3,32 +3,60 @@
 uniform float3 Direction;
 uniform float3 EndPos;
 uniform float3 StartPos;
+uniform float MaxDistance;
 
 //uniform int Forsight; //look ahead for obsticles.
 
 RWStructuredBuffer<float> NodeScore; //write score to buffer.
 StructuredBuffer<float3> NodePos; //Position of node.
-StructuredBuffer<int> NodeIndex; //Position of node.
-StructuredBuffer<int> NodeFaceID; //Position of node.
+StructuredBuffer<int3> NodeIndex; //Position of node.
 
 [numthreads(1,1,1)]
 void CSPath(uint3 id : SV_DispatchThreadID)
 {
-    float Distance = length(EndPos - NodePos[id.x].xy);
+    float Distance = length(EndPos - NodePos[id.x].xyz);
 
-    if (Distance > length(EndPos - StartPos)) //behind start point.
-    {
-        NodeScore[id.x] = 9999999999999999.0;
-        return;
-    }
-    
     if (Distance < 0.01f)
     {
         NodeScore[id.x] = 0.0f;
         return;
     }
     
-    float MaxDistance = length(EndPos - StartPos);
+    float AngleDesirability = 1.0f + -dot(Direction, normalize(EndPos - NodePos[id.x])); //2 if facing. 0 if facing away. 1 is 90 
+    NodeScore[id.x] = (Distance / MaxDistance) * AngleDesirability;
+    float Score = 999999999999.0f;
+
+    for (int i = 1; i < 3; i++)
+    {
+        AngleDesirability = dot(Direction, normalize(EndPos - NodePos[NodeIndex[id.x][i]])); 
+        Distance = length(EndPos - NodePos[NodeIndex[id.x][i]].xyz);
+        Score = min(NodeScore[NodeIndex[id.x][i]], (Distance / MaxDistance) * AngleDesirability);
+    }
+
+    //NodeScore[id.x] = (Distance / MaxDistance) * AngleDesirability; //Low score for desirable angle and distance.
+    NodeScore[id.x] = Score; //Low score for desirable angle and distance.
+}
+
+#pragma kernel CSPathOldVersion
+
+
+[numthreads(1, 1, 1)]
+void CSPathOldVersion(uint3 id : SV_DispatchThreadID)
+{
+    float Distance = length(EndPos - NodePos[id.x].xyz);
+
+    if (Distance > MaxDistance) //behind start point.
+    {
+        NodeScore[id.x] = 9999999999999999.0;
+        return;
+    }
+
+    if (Distance < 0.01f)
+    {
+        NodeScore[id.x] = 0.0f;
+        return;
+    }
+
     float AngleDesirability = dot(Direction, normalize(EndPos - NodePos[id.x])); //1 if facing. -1 if facing away. 0 is 90 degrees
 
     AngleDesirability = (1.0 - AngleDesirability) * 10.0;
