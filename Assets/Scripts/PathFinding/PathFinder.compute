@@ -1,0 +1,39 @@
+﻿#pragma kernel CSPath
+
+uniform float2 Direction;
+uniform float2 EndPos;
+uniform float2 StartPos;
+
+//uniform int Forsight; //look ahead for obsticles.
+
+RWStructuredBuffer<float> NodeScore; //write score to buffer.
+StructuredBuffer<float3> NodePos; //Position of node.
+StructuredBuffer<int> NodeIndex; //Position of node.
+
+[numthreads(1,1,1)]
+void CSPath(uint3 id : SV_DispatchThreadID)
+{
+    float Distance = length(EndPos - NodePos[id.x].xy);
+
+    if (Distance > length(EndPos - StartPos)) //behind start point.
+    {
+        NodeScore[id.x] = 9999999999999999.0;
+        return;
+    }
+    
+    if (Distance < 0.01f)
+    {
+        NodeScore[id.x] = 0.0f;
+        return;
+    }
+    
+    float MaxDistance = length(EndPos - StartPos);
+    float AngleDesirability = dot(Direction, normalize(EndPos - NodePos[id.x])); //1 if facing. -1 if facing away. 0 is 90 degrees
+
+    AngleDesirability = (1.0 - AngleDesirability) * 10.0;
+
+    //TODO: Use forsight to look at future nodes for obsticles and add to score. (for loop)
+
+    //NodeScore[id.x] = (Distance / MaxDistance) * (1.0 - AngleDesirability); //Low score for desirable angle and distance.
+    NodeScore[id.x] = (Distance / MaxDistance) * AngleDesirability; //Low score for desirable angle and distance.
+}

@@ -409,6 +409,12 @@ MonoBehaviour:
   node: {fileID: 7984712458797513453, guid: 20df309e297a64642911d31ac3bcbb64, type: 3}
   GridSize: 10
   SpawnGrid: 1
+  GridScale: 15
+  NodeList: []
+  PathFindingComputeShader: {fileID: 7200000, guid: 8f57ed09b00068e43aea1fc738d743d8, type: 3}
+  DispatchCompute: 0
+  StartNode: {fileID: 0}
+  EndNode: {fileID: 0}
 --- !u!4 &396502261
 Transform:
   m_ObjectHideFlags: 0
