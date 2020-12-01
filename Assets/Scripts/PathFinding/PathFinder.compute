@@ -8,61 +8,73 @@ uniform float MaxDistance;
 //uniform int Forsight; //look ahead for obsticles.
 
 RWStructuredBuffer<float> NodeScore; //write score to buffer.
-StructuredBuffer<float3> NodePos; //Position of node.
-StructuredBuffer<int3> NodeIndex; //Position of node.
+StructuredBuffer<float3> NodeVertex; //Position of node.
+StructuredBuffer<int3> NodeIndices; //Position of node.
 
 [numthreads(1,1,1)]
 void CSPath(uint3 id : SV_DispatchThreadID)
 {
-    float Distance = length(EndPos - NodePos[id.x].xyz);
+    /// for each face I want to:
+    /// Check each indexed vertex it is connected to. 
+    /// Each index will have it's own score plus the lowest scoring connected node.
+    /// It's own score will be calculated only if iteration is true. (This will stop nodes resetting)
 
-    if (Distance < 0.01f)
-    {
-        NodeScore[id.x] = 0.0f;
-        return;
-    }
-    
-    float AngleDesirability = 1.0f + -dot(Direction, normalize(EndPos - NodePos[id.x])); //2 if facing. 0 if facing away. 1 is 90 
-    NodeScore[id.x] = (Distance / MaxDistance) * AngleDesirability;
-    float Score = 999999999999.0f;
+    int3 Index = NodeIndices[id.x]; //face index collection 
 
-    for (int i = 1; i < 3; i++)
-    {
-        AngleDesirability = dot(Direction, normalize(EndPos - NodePos[NodeIndex[id.x][i]])); 
-        Distance = length(EndPos - NodePos[NodeIndex[id.x][i]].xyz);
-        Score = min(NodeScore[NodeIndex[id.x][i]], (Distance / MaxDistance) * AngleDesirability);
-    }
+        //Loop through connected vertices
+        for (int i = 0; i < 2; i++)
+        {
+            //Get angle desirability for current vertex. 1 + -dot product will create a value between 0 and 2.
+            //Negative dot gives -1 if direction is facing, + 2 if facing away. This is because lowest score is desired at the end.
+            float AngleDesire = -dot(Direction, normalize(EndPos - NodeVertex[Index[i]].xyz));
+            float Distance = length(EndPos - NodeVertex[Index[i]].xyz); //Get distance 
 
-    //NodeScore[id.x] = (Distance / MaxDistance) * AngleDesirability; //Low score for desirable angle and distance.
-    NodeScore[id.x] = Score; //Low score for desirable angle and distance.
+            //NodeScore[id.x * 3 + i] = (Distance / MaxDistance);// *AngleDesire;
+            NodeScore[id.x * 3 + i] = AngleDesire;
+        }
+
+    //iterate through faces connected indices to find lowest scoring connected index and add to the score.
+    //for (int i = 0; i < 3; i++)
+    //{
+    //    float score = 99999999.9f;
+    //    for (int j = 0; j < 3; j++)
+    //    {
+    //        score = min(NodeScore[id.x * 3 + j], score);
+    //    }
+    //    NodeScore[id.x * 3 + i] += score;
+    //}
+
+
 }
 
-#pragma kernel CSPathOldVersion
-
-
-[numthreads(1, 1, 1)]
-void CSPathOldVersion(uint3 id : SV_DispatchThreadID)
-{
-    float Distance = length(EndPos - NodePos[id.x].xyz);
-
-    if (Distance > MaxDistance) //behind start point.
-    {
-        NodeScore[id.x] = 9999999999999999.0;
-        return;
-    }
-
-    if (Distance < 0.01f)
-    {
-        NodeScore[id.x] = 0.0f;
-        return;
-    }
-
-    float AngleDesirability = dot(Direction, normalize(EndPos - NodePos[id.x])); //1 if facing. -1 if facing away. 0 is 90 degrees
-
-    AngleDesirability = (1.0 - AngleDesirability) * 10.0;
-
-    //TODO: Use forsight to look at future nodes for obsticles and add to score. (for loop)
-
-    //NodeScore[id.x] = (Distance / MaxDistance) * (1.0 - AngleDesirability); //Low score for desirable angle and distance.
-    NodeScore[id.x] = (Distance / MaxDistance) * AngleDesirability; //Low score for desirable angle and distance.
-}
+//
+//
+//#pragma kernel CSPathOldVersion
+//
+//
+//[numthreads(1, 1, 1)]
+//void CSPathOldVersion(uint3 id : SV_DispatchThreadID)
+//{
+//    float Distance = length(EndPos - NodeVertex[id.x].xyz);
+//
+//    if (Distance > MaxDistance) //behind start point.
+//    {
+//        NodeScore[id.x] = 9999999999999999.0;
+//        return;
+//    }
+//
+//    if (Distance < 0.01f)
+//    {
+//        NodeScore[id.x] = 0.0f;
+//        return;
+//    }
+//
+//    float AngleDesirability = dot(Direction, normalize(EndPos - NodeVertex[id.x])); //1 if facing. -1 if facing away. 0 is 90 degrees
+//
+//    AngleDesirability = (1.0 - AngleDesirability) * 10.0;
+//
+//    //TODO: Use forsight to look at future nodes for obsticles and add to score. (for loop)
+//
+//    //NodeScore[id.x] = (Distance / MaxDistance) * (1.0 - AngleDesirability); //Low score for desirable angle and distance.
+//    NodeScore[id.x] = (Distance / MaxDistance) * AngleDesirability; //Low score for desirable angle and distance.
+//}
