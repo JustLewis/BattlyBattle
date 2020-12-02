@@ -14,8 +14,8 @@ public class Node : MonoBehaviour
     public bool SetStart;
     public bool SetEnd;
 
-    private bool IsStart;
-    private bool IsEnd;
+    private bool IsStart = false;
+    private bool IsEnd = false;
 
     private void Start()
     {

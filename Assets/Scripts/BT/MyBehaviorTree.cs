@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEditor.PackageManager.Requests;
 using UnityEditorInternal;
 using UnityEngine;
@@ -16,8 +15,8 @@ public enum BTStatus
 public abstract class BTNode
 {
 
-    protected Blackboard bb;
-    public BTNode(Blackboard bbin)
+    protected MyBlackBoard bb;
+    public BTNode(MyBlackBoard bbin)
     {
         this.bb = bbin;
     }
@@ -35,7 +34,7 @@ public abstract class CompositeNode : BTNode
     protected int CurrentChildIndex = 0;
     protected List<BTNode> Children;
 
-    public CompositeNode(Blackboard bb) : base(bb)
+    public CompositeNode(MyBlackBoard bb) : base(bb)
     {
         Children = new List<BTNode>();
     }
@@ -53,7 +52,7 @@ public abstract class CompositeNode : BTNode
 public class Selector : CompositeNode
 {
     protected int ChildIterator = 0;
-    public Selector(Blackboard bb) : base(bb)
+    public Selector(MyBlackBoard bb) : base(bb)
     {
 
     }
@@ -86,7 +85,7 @@ public class Sequence : CompositeNode
 {
     int ChildIterator = 0;
 
-    public Sequence(Blackboard bb) : base(bb){ }
+    public Sequence(MyBlackBoard bb) : base(bb){ }
 
     public override BTStatus Execute()
     {
@@ -115,7 +114,7 @@ public class Sequence : CompositeNode
 public abstract class DecoratorNode : BTNode 
 {
     protected BTNode WrappedNode;
-    public DecoratorNode(BTNode WrappedNodeIn, Blackboard BBin) : base(BBin)
+    public DecoratorNode(BTNode WrappedNodeIn, MyBlackBoard BBin) : base(BBin)
     {
         this.WrappedNode = WrappedNodeIn;
     }
@@ -132,7 +131,7 @@ public abstract class DecoratorNode : BTNode
 
 public class InverterDecorator : DecoratorNode
 {
-    public InverterDecorator(BTNode WrappedNodeIn, Blackboard BBin) : base (WrappedNodeIn,BBin)
+    public InverterDecorator(BTNode WrappedNodeIn, MyBlackBoard BBin) : base (WrappedNodeIn,BBin)
     {
 
     }

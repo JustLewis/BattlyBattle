@@ -4,15 +4,11 @@ using UnityEngine;
 
 public class MyBlackBoard : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    //useful basic stuff
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public Vector3 TargetPosition;
+    public Vector3 TargetDirection;
+    public float TargetSpeed;
+
+
 }
