@@ -41,17 +41,24 @@ public abstract class CompositeNode : BTNode
 
     public override void Reset()
     {
-        foreach(BTNode Child in Children)
+        CurrentChildIndex = 0;
+        foreach (BTNode Child in Children)
         {
             Child.Reset();
         }
-        CurrentChildIndex = 0;
+        
+    }
+
+    public void AddChild(BTNode ChildIn)
+    {
+        Children.Add(ChildIn);
     }
 }
 
+
+//iterates until child succeeds.
 public class Selector : CompositeNode
 {
-    protected int ChildIterator = 0;
     public Selector(MyBlackBoard bb) : base(bb)
     {
 
@@ -61,51 +68,64 @@ public class Selector : CompositeNode
     {
         BTStatus ReturnVal = BTStatus.Failure;
 
-        for(int i = ChildIterator; i < Children.Count; i ++)
+        for (int i = CurrentChildIndex; i < Children.Count; i++)
         {
             ReturnVal = Children[i].Execute();
-            if(ReturnVal == BTStatus.Running)
+            if (ReturnVal == BTStatus.Running)
             {
-                ChildIterator = i;
                 return ReturnVal;
             }
             if (ReturnVal == BTStatus.Success)
             {
                 Reset();
-                break;
+                return ReturnVal;
+            }
+            if (ReturnVal == BTStatus.Failure)
+            {
+                CurrentChildIndex++;
+                continue;
             }
         }
+
+        Reset(); //will only get this far if all children iterated over.
         return ReturnVal;
     }
     
-    
 }
 
+//Iterates until child fails.
 public class Sequence : CompositeNode
 {
-    int ChildIterator = 0;
-
     public Sequence(MyBlackBoard bb) : base(bb){ }
 
     public override BTStatus Execute()
     {
         BTStatus ReturnVal = BTStatus.Success;
 
-        for (int i = ChildIterator;i < Children.Count; i ++)
+        for (int i = CurrentChildIndex; i < Children.Count; i ++)
         {
+ 
+
             ReturnVal = Children[i].Execute();
+
             if(ReturnVal == BTStatus.Running)
             {
-                ChildIterator = i;
                 return ReturnVal;
             }
-            if(ReturnVal == BTStatus.Failure)
+            else if(ReturnVal == BTStatus.Failure)
             {
                 Reset();
                 return ReturnVal;
 
             }
+            else if(ReturnVal == BTStatus.Success)
+            {
+                CurrentChildIndex ++;
+                return ReturnVal;
+            }
         }
+        Reset();//will only get this far if all children have been executed.
+
         return ReturnVal;
     }
 
@@ -148,5 +168,25 @@ public class InverterDecorator : DecoratorNode
             return BTStatus.Failure;
         }
         return ReturnValue;
+    }
+}
+
+public abstract class ConditionalDecorator : DecoratorNode
+{
+    public ConditionalDecorator(BTNode WrappedNode, MyBlackBoard BB) : base(WrappedNode,BB)
+    {
+
+    }
+
+    public abstract bool CheckStatus();
+    public override BTStatus Execute()
+    {
+        BTStatus RV = BTStatus.Failure;
+
+        if (CheckStatus())
+        {
+            RV = WrappedNode.Execute();
+        }
+        return RV;
     }
 }

@@ -4,11 +4,10 @@ using UnityEngine;
 
 public class MyBlackBoard : MonoBehaviour
 {
-    //useful basic stuff
 
+    //useful basic stuff
     public Vector3 TargetPosition;
     public Vector3 TargetDirection;
     public float TargetSpeed;
-
 
 }

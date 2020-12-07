@@ -6,7 +6,6 @@ TagManager:
   tags:
   - Food
   - Temp
-  - MyNavMes
   layers:
   - Default
   - TransparentFX
