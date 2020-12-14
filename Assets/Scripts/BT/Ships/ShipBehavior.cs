@@ -70,7 +70,7 @@ public class MoveToTarget : BTNode
 
     public override BTStatus Execute()
     {
-        Debug.LogError("Moving to target" + BB.RouteNodeIterator);
+        //Debug.LogError("Moving to target" + BB.RouteNodeIterator);
         BB.ControlledShip.MoveToTarget();
         return BTStatus.Success;
     }
