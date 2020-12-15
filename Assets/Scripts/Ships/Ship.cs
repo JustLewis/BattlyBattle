@@ -22,6 +22,7 @@ public class Ship : MonoBehaviour
     private ShipTail shipTail;
 
     private SgtPosition Pos;
+    private SgtCameraMove Cam;
 
     private void Awake()
     {
@@ -33,6 +34,7 @@ public class Ship : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Cam = GetComponent<SgtCameraMove>();
         Speed = MaxSpeed;
         shipTail = GetComponentInChildren<ShipTail>();
         BB = this.gameObject.AddComponent<ShipBlackBoard>();
@@ -69,7 +71,7 @@ public class Ship : MonoBehaviour
         else if (!Moving)
         {
             if (shipTail != null)
-            {
+            { 
                 shipTail.VisibleTrailSize(Speed);
             }
         }

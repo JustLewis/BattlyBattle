@@ -2,17 +2,19 @@
 //From https://forum.unity.com/threads/accessing-navmesh-vertices.130883/#post-1229029
 using System.IO;
 using System.Text;
+/*
 using UnityEditor;
 using UnityEditor.SceneManagement;
+*/
 using UnityEngine;
 using UnityEngine.AI; //Needed to have access to navmesh
 
 // Obj exporter component based on: http://wiki.unity3d.com/index.php?title=ObjExporter
-
+/*
 public class NavMeshExporter: MonoBehaviour
 {
 
-    [MenuItem("Custom/Export NavMesh to mesh")]
+    //[MenuItem("Custom/Export NavMesh to mesh")]
     static void Export()
     {
         NavMeshTriangulation triangulatedNavMesh = NavMesh.CalculateTriangulation();
@@ -68,4 +70,9 @@ public class NavMeshExporter: MonoBehaviour
             sw.Write(MeshToString(mesh));
         }
     }
+}*/
+
+
+public class NavMeshExporter : MonoBehaviour
+{
 }
