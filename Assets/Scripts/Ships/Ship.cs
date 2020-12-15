@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SpaceGraphicsToolkit;
 
 public class Ship : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class Ship : MonoBehaviour
     public float MaxSpeed;
     public float Health;
     private float Speed;
+
+    public bool Controlled;
     
     public Color TeamColour;
     
@@ -17,6 +20,8 @@ public class Ship : MonoBehaviour
 
     private MeshRenderer MR;
     private ShipTail shipTail;
+
+    private SgtPosition Pos;
 
     private void Awake()
     {
@@ -41,19 +46,14 @@ public class Ship : MonoBehaviour
         BT = this.gameObject.AddComponent<ShipBehavior>();
         BT.BB = BB;
         BT.initialise();
-
-        foreach(WeaponBase Weapon in GetComponentsInChildren<WeaponBase>())
-        {
-            Weapon.Firing = true;
-
-        }
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        if(Moving)
+        if(Moving && !Controlled)
         {
+            
             Vector3 Direction = BB.TargetPosition - this.transform.position;
             this.transform.forward = Vector3.Normalize(Direction);
             transform.position += transform.forward * 0.05f;
@@ -73,6 +73,8 @@ public class Ship : MonoBehaviour
                 shipTail.VisibleTrailSize(Speed);
             }
         }
+
+
     }
 
     public void MoveToTarget()
