@@ -58,7 +58,8 @@ public class Ship : MonoBehaviour
             
             Vector3 Direction = BB.TargetPosition - this.transform.position;
             this.transform.forward = Vector3.Normalize(Direction);
-            transform.position += transform.forward * 0.05f;
+            //transform.position += transform.forward * 0.05f;
+            transform.position += transform.forward * MaxSpeed;
             if(shipTail != null)
             {
                 shipTail.VisibleTrailSize(MaxSpeed);
