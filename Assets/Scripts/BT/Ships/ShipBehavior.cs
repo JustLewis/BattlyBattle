@@ -6,13 +6,18 @@ public class ShipBehavior : MonoBehaviour
 {
     public ShipBlackBoard BB;
 
-    private BTNode RootBTNode;
+    protected BTNode RootBTNode;
 
-    public void initialise()
+    public virtual void initialise()
     {
         Selector RootChild = new Selector(BB);
         RootBTNode = RootChild;
 
+        CompositeNode WonderSequence = new Sequence(BB);
+        PatrolDecorator WonderRoot = new PatrolDecorator(WonderSequence, BB);
+        WonderSequence.AddChild(new NewWonderPosition(BB));
+        WonderSequence.AddChild(new MoveToTarget(BB));
+        WonderSequence.AddChild(new EyesPeeled(BB));
         
         CompositeNode PatrolSequence = new Sequence(BB);
         PatrolDecorator PatrolRoot = new PatrolDecorator(PatrolSequence, BB);
@@ -20,7 +25,9 @@ public class ShipBehavior : MonoBehaviour
         PatrolSequence.AddChild(new MoveToTarget(BB));
         PatrolSequence.AddChild(new EyesPeeled(BB));
 
-        RootChild.AddChild(PatrolRoot);
+
+        //RootChild.AddChild(PatrolRoot);
+        RootChild.AddChild(WonderRoot);
 
         InvokeRepeating("ExecuteBT", 0.1f, 0.1f);
     }
@@ -28,6 +35,22 @@ public class ShipBehavior : MonoBehaviour
     public void ExecuteBT()
     {
         RootBTNode.Execute();
+    }
+}
+
+public class NewWonderPosition : BTNode
+{
+    private ShipBlackBoard BB;
+    public NewWonderPosition(MyBlackBoard BBin) : base(BBin) 
+    {
+        BB = (ShipBlackBoard)BBin;
+    }
+
+    public override BTStatus Execute()
+    {
+        Debug.Log("Getting new wonder node");
+        BB.TargetPosition = new Vector3(Random.Range(-50.0f, 50.0f), Random.Range(-50.0f, 50.0f), Random.Range(-50.0f, 50.0f)) + BB.Controller.transform.position;
+        return BTStatus.Success;
     }
 }
 
@@ -53,6 +76,7 @@ public class GetPatrolRouteDestination : BTNode
             BB.RouteNodeIterator = 0;
         }
         BB.TargetPosition = BB.RouteNodes[BB.RouteNodeIterator];
+        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
         BB.RouteNodeIterator++;
 
         return BTStatus.Success;
@@ -71,7 +95,8 @@ public class MoveToTarget : BTNode
     public override BTStatus Execute()
     {
         //Debug.LogError("Moving to target" + BB.RouteNodeIterator);
-        BB.ControlledShip.MoveToTarget();
+        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
+        BB.Controller.MoveToTarget();
         return BTStatus.Success;
     }
 }
@@ -87,13 +112,16 @@ public class EyesPeeled : BTNode
 
     public override BTStatus Execute()
     {
+        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
+
         //if enemy visible, stop patrol and stuff
-        if((BB.ControlledShip.transform.position - BB.TargetPosition).magnitude < 1.0f)
+
+
+        //if reached target node.
+        if (Vector3.Distance(BB.TargetPosition, BB.Controller.ControlledShip.transform.position) < BB.Proximity)
         {
-            Debug.LogError("Returning sucess here");
             return BTStatus.Success;
         }
-
         return BTStatus.Running;
     }
 }
@@ -112,3 +140,4 @@ public class PatrolDecorator : ConditionalDecorator
         return true;
     }
 }
+

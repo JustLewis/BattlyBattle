@@ -5,18 +5,16 @@ using SpaceGraphicsToolkit;
 
 public class Ship : MonoBehaviour
 {
-    public ShipBehavior BT;
-    public ShipBlackBoard BB;
-    //Personalise BB params here.
+    public ShipController Controller;
     public float MaxSpeed;
-    public float Health;
+    public float WarpSpeed;
+    public float TurnSpeed;
     private float Speed;
+    private float MaxForce;
 
-    public bool Controlled;
-    
-    public Color TeamColour;
-    
-    private bool Moving = false;
+    public Rigidbody RB;
+
+    public float Health;
 
     private MeshRenderer MR;
     private ShipTail shipTail;
@@ -28,7 +26,8 @@ public class Ship : MonoBehaviour
     {
         MR = GetComponentInChildren<MeshRenderer>();
 
-        MR.material.SetColor("_Color", TeamColour);
+        RB = GetComponent<Rigidbody>();
+        Controller = GetComponent<ShipController>();
     }
 
     // Start is called before the first frame update
@@ -37,52 +36,41 @@ public class Ship : MonoBehaviour
         Cam = GetComponent<SgtCameraMove>();
         Speed = MaxSpeed;
         shipTail = GetComponentInChildren<ShipTail>();
-        BB = this.gameObject.AddComponent<ShipBlackBoard>();
-        BB.ControlledShip = this;
-        BB.RouteNodes = new List<Vector3>();
-        BB.RouteNodes.Add(Vector3.zero);
-        BB.RouteNodes.Add(new Vector3(10.0f,0.0f,10.0f));
-        BB.RouteNodes.Add(new Vector3(-10.0f,0.0f,10.0f));
-        BB.RouteNodes.Add(new Vector3(10.0f,0.0f,-10.0f));
 
-        BT = this.gameObject.AddComponent<ShipBehavior>();
-        BT.BB = BB;
-        BT.initialise();
+        //crude way to make a balanced set of movement stuff.
+        float ScaleOffset = 2 / transform.localScale.x;
+        TurnSpeed = ScaleOffset; 
+        MaxSpeed = MaxSpeed * ScaleOffset;
+        RB.mass = ScaleOffset * 10;
+        MaxForce = ScaleOffset * 10;
+
+        MR.material.SetColor("_Color", Controller.TeamColour);
+
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        if(Moving && !Controlled)
+
+        if (!Controller.Moving) //slow when not adding any force
         {
-            
-            Vector3 Direction = BB.TargetPosition - this.transform.position;
-            this.transform.forward = Vector3.Normalize(Direction);
-            //transform.position += transform.forward * 0.05f;
-            transform.position += transform.forward * MaxSpeed;
-            if(shipTail != null)
-            {
-                shipTail.VisibleTrailSize(MaxSpeed);
-            }
-            if(shipTail == null)
-            {
-                Debug.LogError("Shiptail is missing.");
-            }
-        }
-        else if (!Moving)
-        {
-            if (shipTail != null)
-            { 
-                shipTail.VisibleTrailSize(Speed);
-            }
+            RB.velocity *= 0.9f * Time.deltaTime;
         }
 
-
+        if (shipTail != null)
+        {
+            shipTail.VisibleTrailSize(RB.velocity.magnitude / MaxSpeed);
+        }
+        if (shipTail == null)
+        {
+            Debug.LogError("Shiptail is missing.");
+        }
     }
 
-    public void MoveToTarget()
+    public void MoveToTarget(Vector3 Target)
     {
-        Moving = true;
+        RotateToTarget();
+        RB.velocity += (Target * MaxForce) / RB.mass * Time.deltaTime;
     }
 
     
@@ -94,6 +82,13 @@ public class Ship : MonoBehaviour
             Destroy(this.gameObject);
         }
     }
+
+    public void RotateToTarget()
+    {
+        //transform.forward = Controller.BB.TargetDirection; //cheating
+        transform.forward = RB.velocity; //cheating
+    }
+
 
 }
 

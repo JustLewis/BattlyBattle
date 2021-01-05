@@ -4,10 +4,13 @@ using UnityEngine;
 
 public class ShipTail : MonoBehaviour
 {
+
+    public Vector3 StartPos = new Vector3(0,0,3.38f);
+    public Vector3 MaxDistPos = new Vector3(0, 0, -1.6f);
+
+
     public void VisibleTrailSize(float ScaleIn)
     {
-        Vector3 NewScale = transform.localScale;
-        NewScale.y = NewScale.x * ScaleIn; //x will always be relative the size of the ship that this tail belongs to.
-        transform.localScale = NewScale;
+        transform.localPosition = ((1.0f - ScaleIn) * StartPos) + (ScaleIn * MaxDistPos);
     }
 }
