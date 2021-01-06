@@ -6,22 +6,8 @@ public class CapitalShipController : ShipController
 {
 
     public GameObject PrefabToSpawn;
-    public new void Start()
-    {
-        BB = this.gameObject.AddComponent<ShipBlackBoard>();
-        BB.Controller = this;
-        BB.Proximity = ClosestPromity;
 
-        BB.RouteNodes = new List<Vector3>();
-        BB.RouteNodes.Add(Vector3.zero);
-        BB.RouteNodes.Add(new Vector3(10.0f, 0.0f, 10.0f));
-        BB.RouteNodes.Add(new Vector3(-10.0f, 0.0f, 10.0f));
-        BB.RouteNodes.Add(new Vector3(10.0f, 0.0f, -10.0f));
-
-        BT = this.gameObject.AddComponent<CapitalShipBehaviour>();
-        BT.BB = BB;
-        BT.initialise();
-    }
+    public List<ShipController> Squads = new List<ShipController>();
 
     public override void SpawnShip()
     {
@@ -32,7 +18,8 @@ public class CapitalShipController : ShipController
         }
 
         Vector3 SpawnPos = transform.position + new Vector3(2.0f * ControlledShip.transform.localScale.x, 0, 0);
-        Instantiate(PrefabToSpawn, SpawnPos, transform.rotation);
+        GameObject Obj = Instantiate(PrefabToSpawn, SpawnPos, transform.rotation);
+        Squads.Add(Obj.GetComponent<ShipController>());
 
     }
 }

@@ -5,11 +5,11 @@ using SpaceGraphicsToolkit;
 
 public class Ship : MonoBehaviour
 {
+    [HideInInspector]
     public ShipController Controller;
     public float MaxSpeed;
     public float WarpSpeed;
-    public float TurnSpeed;
-    private float Speed;
+    //public float TurnSpeed;
     private float MaxForce;
 
     public Rigidbody RB;
@@ -22,24 +22,19 @@ public class Ship : MonoBehaviour
     private SgtPosition Pos;
     private SgtCameraMove Cam;
 
-    private void Awake()
-    {
-        MR = GetComponentInChildren<MeshRenderer>();
-
-        RB = GetComponent<Rigidbody>();
-        Controller = GetComponent<ShipController>();
-    }
-
     // Start is called before the first frame update
     void Start()
     {
+        Controller = GetComponent<ShipController>();
+        MR = GetComponentInChildren<MeshRenderer>();
+        RB = GetComponent<Rigidbody>();
+
         Cam = GetComponent<SgtCameraMove>();
-        Speed = MaxSpeed;
         shipTail = GetComponentInChildren<ShipTail>();
 
         //crude way to make a balanced set of movement stuff.
         float ScaleOffset = 2 / transform.localScale.x;
-        TurnSpeed = ScaleOffset; 
+        //TurnSpeed = ScaleOffset; 
         MaxSpeed = MaxSpeed * ScaleOffset;
         RB.mass = ScaleOffset * 10;
         MaxForce = ScaleOffset * 10;
@@ -86,7 +81,7 @@ public class Ship : MonoBehaviour
     public void RotateToTarget()
     {
         //transform.forward = Controller.BB.TargetDirection; //cheating
-        transform.forward = RB.velocity; //cheating
+        transform.forward = RB.velocity; //cheating but actual rotation isn't necessary.
     }
 
 

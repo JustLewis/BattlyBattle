@@ -4,16 +4,31 @@ using UnityEngine;
 
 public class ShipController : MonoBehaviour
 {
+    [HideInInspector]
     public ShipBehavior BT;
+    [HideInInspector]
     public ShipBlackBoard BB;
 
     public bool Controlled;
-
+    [HideInInspector]
     public bool Moving = false;
+
     public Color TeamColour;
 
+    [HideInInspector]
     public Ship ControlledShip;
+
     public float ClosestPromity;
+
+    [HideInInspector]
+    public enum SteeringDesires 
+    { Seek = 0,
+    Arrive = 1,
+    Flee = 2
+    }
+
+    private float[] SteeringDesireFloats = {1.0f,0,0};
+
 
     public void Awake()
     {
@@ -22,7 +37,12 @@ public class ShipController : MonoBehaviour
 
     public void Start()
     {
-        BB = this.gameObject.AddComponent<ShipBlackBoard>();
+        BB = GetComponent<ShipBlackBoard>();
+        if (BB == null)
+        {
+            Debug.LogError("NO BLACK BOARD ATTACHED TO THIS OBJECT : " + this.gameObject.name);
+            return;
+        }
         BB.Controller = this;
         BB.Proximity = ClosestPromity;
 
@@ -32,7 +52,13 @@ public class ShipController : MonoBehaviour
         BB.RouteNodes.Add(new Vector3(-10.0f, 0.0f, 10.0f));
         BB.RouteNodes.Add(new Vector3(10.0f, 0.0f, -10.0f));
 
-        BT = this.gameObject.AddComponent<ShipBehavior>();
+        BT = GetComponent<ShipBehavior>();
+        if (BT == null)
+        {
+            Debug.LogError("NO BEHAVIOUR TREE ATTACHED TO THIS OBJECT : " + this.gameObject.name);
+            return;
+        }
+
         BT.BB = BB;
         BT.initialise();
     }
@@ -41,7 +67,6 @@ public class ShipController : MonoBehaviour
     {
         if (Moving && !Controlled)
         {
-            
             MoveToTarget();
         }
 
@@ -49,43 +74,31 @@ public class ShipController : MonoBehaviour
 
     public void MoveToTarget()
     {
-        if (Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) < BB.Proximity * 5)
+
+        SteeringDesireFloats[(int)SteeringDesires.Arrive] = Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) / (BB.Proximity * 10);
+        SteeringDesireFloats[(int)SteeringDesires.Seek] = 1 - SteeringDesireFloats[(int)SteeringDesires.Arrive];
+
+        Vector3 DesiredVelocity = Vector3.zero;
+       
+        foreach (SteeringBehaviourBase Steering in GetComponents<SteeringBehaviourBase>())
         {
-            Debug.Log("Arriving");
-            ControlledShip.MoveToTarget(Arrive(BB.TargetPosition,2.0f));
+            DesiredVelocity += Steering.Calculate();
         }
-        else
-        {
-            ControlledShip.MoveToTarget(SeekDir(BB.TargetPosition));
-        }
+
+        ControlledShip.MoveToTarget(DesiredVelocity);
         
         Moving = true;
     }
 
-    public Vector3 SeekDir(Vector3 TargetPos)
-    {
-        Vector3 DesiredVelocity = Vector3.Normalize(TargetPos - transform.position) * ControlledShip.MaxSpeed;
-
-        return (DesiredVelocity - ControlledShip.RB.velocity);
-    }
-
-    public Vector3 Arrive(Vector3 TargetPos,float decelleration)
-    {
-        Vector3 ToTarget = TargetPos - BB.Controller.transform.position;
-        float Distance = Vector3.Distance(Vector3.zero,ToTarget);
-
-        if (Distance > 0)
-        {
-            float DecellerationAmount = 0.3f;
-            float speed = Distance / (DecellerationAmount * decelleration);
-            speed = Mathf.Min(speed, BB.Controller.ControlledShip.MaxSpeed);
-            Vector3 DesiredVelocity = ToTarget * speed / Distance;
-
-            return (DesiredVelocity - BB.Controller.ControlledShip.RB.velocity);
-        }
-        return Vector3.zero;
-    }
-
     public virtual void SpawnShip() { }
 
+    public float GetSteeringDesire(SteeringDesires In)
+    {
+        return SteeringDesireFloats[(int)In];
+    }
+
+    public void SetSteeringDesire(SteeringDesires Desire, float NewDes)
+    {
+        SteeringDesireFloats[(int)Desire] = Mathf.Clamp(NewDes,0.0f,1.0f);
+    }
 }
