@@ -9,6 +9,9 @@ public class ShipController : MonoBehaviour
     [HideInInspector]
     public ShipBlackBoard BB;
 
+    [HideInInspector]
+    public List<ShipController> Squads = new List<ShipController>();
+
     public bool Controlled;
     [HideInInspector]
     public bool Moving = false;
@@ -20,14 +23,18 @@ public class ShipController : MonoBehaviour
 
     public float ClosestPromity;
 
+    public List<Vector3> SquadPositions = new List<Vector3>();
+
     [HideInInspector]
     public enum SteeringDesires 
-    { Seek = 0,
-    Arrive = 1,
-    Flee = 2
+    { 
+        Seek = 0,
+        Arrive = 1,
+        Flee = 2,
+        Pursuit = 3
     }
 
-    private float[] SteeringDesireFloats = {1.0f,0,0};
+    private float[] SteeringDesireFloats = {1.0f,0,0,0};
 
 
     public void Awake()
@@ -48,9 +55,10 @@ public class ShipController : MonoBehaviour
 
         BB.RouteNodes = new List<Vector3>();
         BB.RouteNodes.Add(Vector3.zero);
-        BB.RouteNodes.Add(new Vector3(10.0f, 0.0f, 10.0f));
-        BB.RouteNodes.Add(new Vector3(-10.0f, 0.0f, 10.0f));
-        BB.RouteNodes.Add(new Vector3(10.0f, 0.0f, -10.0f));
+        float WonderOffset = 10 * transform.localScale.x;
+        BB.RouteNodes.Add(new Vector3(WonderOffset, 0.0f, WonderOffset));
+        BB.RouteNodes.Add(new Vector3(-WonderOffset, 0.0f, WonderOffset));
+        BB.RouteNodes.Add(new Vector3(WonderOffset, 0.0f, -WonderOffset));
 
         BT = GetComponent<ShipBehavior>();
         if (BT == null)
@@ -75,8 +83,8 @@ public class ShipController : MonoBehaviour
     public void MoveToTarget()
     {
 
-        SteeringDesireFloats[(int)SteeringDesires.Arrive] = Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) / (BB.Proximity * 10);
-        SteeringDesireFloats[(int)SteeringDesires.Seek] = 1 - SteeringDesireFloats[(int)SteeringDesires.Arrive];
+        SteeringDesireFloats[(int)SteeringDesires.Seek] = Mathf.Clamp(Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) / (BB.Proximity * 10),0.0f,1.0f);
+        SteeringDesireFloats[(int)SteeringDesires.Arrive] = 1.0f - SteeringDesireFloats[(int)SteeringDesires.Seek];
 
         Vector3 DesiredVelocity = Vector3.zero;
        
@@ -91,6 +99,25 @@ public class ShipController : MonoBehaviour
     }
 
     public virtual void SpawnShip() { }
+
+    public virtual void GiveSquadLocation(Vector3 Pos)
+    {
+        int Iterator = 0;
+
+        FormationPosition[] FP = GetComponentsInChildren<FormationPosition>();
+
+        foreach (ShipController SquadMember in Squads)
+        {
+            SquadMember.BB.RouteNodes.Clear();
+            SquadMember.BB.RouteNodeIterator = 0;
+            //SquadMember.BB.RouteNodes.Add(Pos);
+            //SquadMember.BB.TargetPosition = Pos;
+            SquadMember.BB.RouteNodes.Add(FP[Iterator].GetPos());
+            SquadMember.BB.TargetPosition = FP[Iterator].GetPos();
+
+            Iterator++;
+        }
+    }
 
     public float GetSteeringDesire(SteeringDesires In)
     {

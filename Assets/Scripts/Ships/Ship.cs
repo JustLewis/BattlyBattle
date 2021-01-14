@@ -12,6 +12,7 @@ public class Ship : MonoBehaviour
     //public float TurnSpeed;
     private float MaxForce;
 
+    [HideInInspector]
     public Rigidbody RB;
 
     public float Health;
@@ -84,6 +85,10 @@ public class Ship : MonoBehaviour
         transform.forward = RB.velocity; //cheating but actual rotation isn't necessary.
     }
 
+    public void SetColour()
+    {
+        MR.material.SetColor("_Color", Controller.TeamColour);
+    }
 
 }
 

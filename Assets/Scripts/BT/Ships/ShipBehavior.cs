@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ShipBehavior : MonoBehaviour
 {
+    [HideInInspector]
     public ShipBlackBoard BB;
 
     protected BTNode RootBTNode;
@@ -25,9 +26,15 @@ public class ShipBehavior : MonoBehaviour
         PatrolSequence.AddChild(new MoveToTarget(BB));
         PatrolSequence.AddChild(new EyesPeeled(BB));
 
+        CompositeNode MoveToSequence = new Sequence(BB);
+        PatrolDecorator MoveToRoot = new PatrolDecorator(MoveToSequence, BB);
+        MoveToSequence.AddChild(new MoveToTarget(BB));
+        MoveToSequence.AddChild(new EyesPeeled(BB));
 
         //RootChild.AddChild(PatrolRoot);
         RootChild.AddChild(WonderRoot);
+        RootChild.AddChild(MoveToRoot);
+        RootChild.AddChild(PatrolRoot);
 
         InvokeRepeating("ExecuteBT", 0.1f, 0.1f);
     }
@@ -49,7 +56,13 @@ public class NewWonderPosition : BTNode
     public override BTStatus Execute()
     {
         Debug.Log("Getting new wonder node");
-        BB.TargetPosition = new Vector3(Random.Range(-50.0f, 50.0f), Random.Range(-50.0f, 50.0f), Random.Range(-50.0f, 50.0f)) + BB.Controller.transform.position;
+       
+        float WonderOffset = BB.Controller.transform.localScale.x * 50.0f;
+        BB.TargetPosition = new Vector3(Random.Range(-WonderOffset, WonderOffset),
+            Random.Range(-WonderOffset, WonderOffset), 
+            Random.Range(-WonderOffset, WonderOffset)) + BB.Controller.transform.position;
+
+        BB.TargetPosition.y = 0.0f;//Just to keep everyone on one plane
         return BTStatus.Success;
     }
 }

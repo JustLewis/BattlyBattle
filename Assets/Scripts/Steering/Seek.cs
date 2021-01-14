@@ -8,7 +8,7 @@ public class Seek : SteeringBehaviourBase
     {
         ShipController SC = GetComponent<ShipController>();
         float Desire = SC.GetSteeringDesire((int)ShipController.SteeringDesires.Seek);
-        if (Desire > 0.1f)
+        if (Desire > 0.2f)
         {
             Vector3 DesiredVelocity = Vector3.Normalize(SC.BB.TargetPosition - transform.position) * SC.ControlledShip.MaxSpeed;
 

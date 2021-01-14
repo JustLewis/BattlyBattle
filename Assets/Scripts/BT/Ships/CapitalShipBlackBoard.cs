@@ -6,4 +6,6 @@ public class CapitalShipBlackBoard : ShipBlackBoard
 {
     // Start is called before the first frame update
     //public new CapitalShipController Controller;
+
+    
 }
