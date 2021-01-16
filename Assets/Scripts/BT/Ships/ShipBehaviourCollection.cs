@@ -77,7 +77,6 @@ public class MoveToTarget : BTNode
         BB.Controller.CurrentBTNode = "MoveToTarget";
         //Debug.LogError("Moving to target" + BB.RouteNodeIterator);
         BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position);
-        BB.Controller.MoveToTarget();
         return BTStatus.Success;
     }
 }
@@ -152,6 +151,39 @@ public class PursuitNode : BTNode
         {
             return BTStatus.Success;
         }
+        return BTStatus.Running;
+    }
+}
+public class CapitalPursuitNode : BTNode
+{
+    private ShipBlackBoard BB;
+
+    public CapitalPursuitNode(MyBlackBoard BBin) : base(BBin)
+    {
+        BB = (ShipBlackBoard)BBin;
+    }
+
+    public override BTStatus Execute()
+    {
+        BB.Controller.CurrentBTNode = "Pursuit";
+        if (BB.EnemyShip == null)
+        {
+            Debug.LogError("Supposed to chase enemy but no enemy in BB");
+            return BTStatus.Failure;
+        }
+        if (BB.EnemyShip != null)
+        {
+            BB.TargetPosition = BB.EnemyShip.transform.position;
+            BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position);
+            Debug.Log("Chasing target");
+        }
+        //if close to enemy. 
+        if (Vector3.Distance(BB.TargetPosition, BB.Controller.ControlledShip.transform.position) < BB.Proximity)
+        {
+            return BTStatus.Success;
+        }
+        BB.Controller.SpawnShip();
+
         return BTStatus.Running;
     }
 }

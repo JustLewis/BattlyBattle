@@ -7,41 +7,45 @@ public class CapitalShipController : ShipController
 
     public GameObject PrefabToSpawn;
     public int SquadSize = 5;
+    public int SquadMax = 3;
 
     private int SquadCount = 0;
     private ShipController CurrentSquadLeader;
 
     public override void SpawnShip()
     {
-        if(PrefabToSpawn == null)
+        if (Squads.Count < SquadMax)
         {
-            Debug.LogError("No ship to spawn in " + this.name);
-            return;
-        }
+            if (PrefabToSpawn == null)
+            {
+                Debug.LogError("No ship to spawn in " + this.name);
+                return;
+            }
 
-        Vector3 SpawnPos = transform.position + new Vector3(4.0f * ControlledShip.transform.localScale.x, 0, 0);
-        Debug.Log("Controlled ship local scale x is " + ControlledShip.transform.localScale.x);
-        GameObject Obj = Instantiate(PrefabToSpawn, SpawnPos, transform.rotation);
-        ShipController SC = Obj.GetComponent<ShipController>();
-        if (SquadCount <= 0)
-        {
-            Squads.Add(SC);
-            CurrentSquadLeader = SC;
-            SquadCount = SquadSize;
-            //StartCoroutine(SetSquadLeaderCR(SC));
-            CurrentSquadLeader = SC;
-            SC.BB.TeamID = BB.TeamID;
-            SC.TeamColour = TeamColour;
-            SC.ControlledShip.SetColour();
-        }
-        else
-        {
-            //StartCoroutine(SetSquadMemberCR(SC));
-            CurrentSquadLeader.Squads.Add(SC);
-            SC.BB.TeamID = BB.TeamID;
-            SC.TeamColour = TeamColour;
-            SC.ControlledShip.SetColour();
-            SquadCount--;
+            Vector3 SpawnPos = transform.position + new Vector3(4.0f * ControlledShip.transform.localScale.x, 0, 0);
+            Debug.Log("Controlled ship local scale x is " + ControlledShip.transform.localScale.x);
+            GameObject Obj = Instantiate(PrefabToSpawn, SpawnPos, transform.rotation);
+            ShipController SC = Obj.GetComponent<ShipController>();
+            if (SquadCount <= 0)
+            {
+                Squads.Add(SC);
+                CurrentSquadLeader = SC;
+                SquadCount = SquadSize;
+                //StartCoroutine(SetSquadLeaderCR(SC));
+                CurrentSquadLeader = SC;
+                SC.BB.TeamID = BB.TeamID;
+                SC.TeamColour = TeamColour;
+                SC.ControlledShip.SetColour();
+            }
+            else
+            {
+                //StartCoroutine(SetSquadMemberCR(SC));
+                CurrentSquadLeader.Squads.Add(SC);
+                SC.BB.TeamID = BB.TeamID;
+                SC.TeamColour = TeamColour;
+                SC.ControlledShip.SetColour();
+                SquadCount--;
+            }
         }
 
     }

@@ -97,7 +97,7 @@ public class ShipController : MonoBehaviour
 
     }
 
-    public void MoveToTarget()
+    public void MoveToTargetRelaxed()
     {
 
         SteeringDesireFloats[(int)SteeringDesires.Seek] = Mathf.Clamp(Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) / (BB.Proximity * 10),0.0f,1.0f);
@@ -109,9 +109,27 @@ public class ShipController : MonoBehaviour
         {
             DesiredVelocity += Steering.Calculate();
         }
+       
 
-        ControlledShip.MoveToTarget(DesiredVelocity);
+        ControlledShip.MoveToTarget(DesiredVelocity * 0.5f); //just to give some relaxed movement for now.
         
+    }
+
+    public void MoveToTargetAttack()
+    {
+
+        SteeringDesireFloats[(int)SteeringDesires.Seek] = Mathf.Clamp(Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) / (BB.Proximity), 0.0f, 1.0f);
+        SteeringDesireFloats[(int)SteeringDesires.Arrive] = 1.0f - SteeringDesireFloats[(int)SteeringDesires.Seek];
+
+        Vector3 DesiredVelocity = Vector3.zero;
+
+        foreach (SteeringBehaviourBase Steering in GetComponents<SteeringBehaviourBase>())
+        {
+            DesiredVelocity += Steering.Calculate();
+        }
+        GiveSquadLocation(BB.TargetPosition); //Set squad target positions.
+        ControlledShip.MoveToTarget(DesiredVelocity);
+
     }
 
     public virtual void SpawnShip() { }

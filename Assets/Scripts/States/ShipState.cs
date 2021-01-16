@@ -31,7 +31,7 @@ public class ShipStateAttack : ShipState<ShipController>
 
     public override void Execute(ShipController ShipIn)
     {
-        ShipIn.MoveToTarget();
+        ShipIn.MoveToTargetAttack();
         PerceptionRadar PR = ShipIn.GetComponent<PerceptionRadar>();
         if (PR != null || ShipIn.BB.EnemyShip == null)
         {
@@ -60,7 +60,7 @@ public class ShipStateRelax : ShipState<ShipController>
 
     public override void Execute(ShipController ShipIn)
     {
-        ShipIn.MoveToTarget();
+        ShipIn.MoveToTargetRelaxed();
         PerceptionRadar PR = ShipIn.GetComponent<PerceptionRadar>();
         if (PR != null)
         {

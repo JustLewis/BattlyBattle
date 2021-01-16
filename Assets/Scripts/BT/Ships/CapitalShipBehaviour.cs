@@ -22,7 +22,7 @@ public class CapitalShipBehaviour : ShipBehavior
         CompositeNode AttackSequence = new Sequence(BB);
         AttackSequence.AddChild(new AquireEnemyTarget(BB));
         AttackSequence.AddChild(new SquadControl(BB));
-        AttackSequence.AddChild(new PursuitNode(BB));
+        AttackSequence.AddChild(new CapitalPursuitNode(BB));
         EnemySpottedConditional AttackRoot = new EnemySpottedConditional(AttackSequence, BB);
 
         RootChild.AddChild(WonderRoot);
