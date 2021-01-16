@@ -15,10 +15,10 @@ public enum BTStatus
 public abstract class BTNode
 {
 
-    protected MyBlackBoard bb;
+    protected MyBlackBoard BBin;
     public BTNode(MyBlackBoard bbin)
     {
-        this.bb = bbin;
+        this.BBin = bbin;
     }
 
     public abstract BTStatus Execute();
@@ -34,7 +34,7 @@ public abstract class CompositeNode : BTNode
     protected int CurrentChildIndex = 0;
     protected List<BTNode> Children;
 
-    public CompositeNode(MyBlackBoard bb) : base(bb)
+    public CompositeNode(MyBlackBoard BBin) : base(BBin)
     {
         Children = new List<BTNode>();
     }
@@ -59,7 +59,7 @@ public abstract class CompositeNode : BTNode
 //iterates until child succeeds.
 public class Selector : CompositeNode
 {
-    public Selector(MyBlackBoard bb) : base(bb)
+    public Selector(MyBlackBoard BBin) : base(BBin)
     {
 
     }
@@ -96,7 +96,7 @@ public class Selector : CompositeNode
 //Iterates until child fails.
 public class Sequence : CompositeNode
 {
-    public Sequence(MyBlackBoard bb) : base(bb){ }
+    public Sequence(MyBlackBoard BBin) : base(BBin){ }
 
     public override BTStatus Execute()
     {
@@ -173,7 +173,7 @@ public class InverterDecorator : DecoratorNode
 
 public abstract class ConditionalDecorator : DecoratorNode
 {
-    public ConditionalDecorator(BTNode WrappedNode, MyBlackBoard BB) : base(WrappedNode,BB)
+    public ConditionalDecorator(BTNode WrappedNode, MyBlackBoard BBin) : base(WrappedNode,BBin)
     {
 
     }

@@ -142,6 +142,14 @@ PrefabInstance:
       propertyPath: TeamColour.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3873855038167982384, guid: dd42161c5790feb4d9bc2283c793029a, type: 3}
+      propertyPath: PrefabToSpawn
+      value: 
+      objectReference: {fileID: 6393877860060973893, guid: 4696d1d3c06298740aa7c67b55d66e73, type: 3}
+    - target: {fileID: 3873855038167982384, guid: dd42161c5790feb4d9bc2283c793029a, type: 3}
+      propertyPath: ClosestPromity
+      value: 50
+      objectReference: {fileID: 0}
     - target: {fileID: 6755853024093924955, guid: dd42161c5790feb4d9bc2283c793029a, type: 3}
       propertyPath: TeamID
       value: 0

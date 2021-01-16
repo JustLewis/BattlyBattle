@@ -15,18 +15,17 @@ public class ShipBehavior : MonoBehaviour
         RootBTNode = RootChild;
 
         CompositeNode WonderSequence = new Sequence(BB);
-        PatrolDecorator WonderRoot = new PatrolDecorator(WonderSequence, BB);
+        WonderDecorator WonderRoot = new WonderDecorator(WonderSequence, BB);
         WonderSequence.AddChild(new NewWonderPosition(BB));
         WonderSequence.AddChild(new MoveToTarget(BB));
         WonderSequence.AddChild(new EyesPeeled(BB));
 
         CompositeNode AttackSequence = new Sequence(BB);
-        PatrolDecorator AttackRoot = new PatrolDecorator(AttackSequence, BB);
+        EnemySpottedConditional AttackRoot = new EnemySpottedConditional(AttackSequence, BB);
         AttackSequence.AddChild(new MoveToTarget(BB));
         AttackSequence.AddChild(new SquadControl(BB));
         AttackSequence.AddChild(new PursuitNode(BB));
 
-        //RootChild.AddChild(PatrolRoot);
         RootChild.AddChild(WonderRoot);
         RootChild.AddChild(AttackRoot);
 

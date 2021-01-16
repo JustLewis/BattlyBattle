@@ -83,11 +83,11 @@ public class PerceptionRadar : MonoBehaviour
             if (Rad.LastSeenTeam == TeamID)
             {
                 Debug.DrawLine(transform.position, Rad.LastSeenPosition + Rad.LastSeenVelocity * (Rad.TimeLastSeen - Time.time), Color.green * TimeFactor, 0.10f, false);
-                EnemyDetected = true;
             }
             else if (Rad.LastSeenTeam != TeamID)
             {
                 Debug.DrawLine(transform.position, Rad.LastSeenPosition + Rad.LastSeenVelocity * (Rad.TimeLastSeen - Time.time), Color.red * TimeFactor, 0.10f, false);
+                EnemyDetected = true;
             }
         }
     }

@@ -76,7 +76,7 @@ public class MoveToTarget : BTNode
     {
         BB.Controller.CurrentBTNode = "MoveToTarget";
         //Debug.LogError("Moving to target" + BB.RouteNodeIterator);
-        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
+        BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position);
         BB.Controller.MoveToTarget();
         return BTStatus.Success;
     }
@@ -97,7 +97,7 @@ public class EyesPeeled : BTNode
     public override BTStatus Execute()
     {
         BB.Controller.CurrentBTNode = "Eyes peeled";
-        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position); //Updating direction to target.
+        BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position); //Updating direction to target.
 
         //if enemy visible, stop patrol and stuff
         PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
@@ -156,23 +156,32 @@ public class PursuitNode : BTNode
     }
 }
 
-public class PatrolDecorator : ConditionalDecorator
+/// <summary>
+/// Wonder behaviour root. While this is true, keep wondering.
+/// </summary>
+public class WonderDecorator : ConditionalDecorator
 {
     private ShipBlackBoard BB;
 
-    public PatrolDecorator(BTNode WrappedNode, MyBlackBoard BBin) : base(WrappedNode, BBin)
+    public WonderDecorator(BTNode WrappedNode, MyBlackBoard BBin) : base(WrappedNode, BBin)
     {
         BB = (ShipBlackBoard)BBin;
     }
 
     public override bool CheckStatus()
     {
+        PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
+        if(PR == null)
+        {
+            Debug.LogError("Error getting radar in Wonder Decorator");
+            return true; //keep going with current sequence.
+        }
+
         BB.Controller.CurrentBTNode = "patrol Decorator";
-        return true;
+        return !PR.EnemyDetected; //If enemy detected, exit wonder behaviour. 
     }
 }
 
-//one shot BTNode, if enemys in radar.
 public class EnemySpottedConditional : ConditionalDecorator
 {
     ShipBlackBoard BB;

@@ -14,6 +14,7 @@ public class ShipStateAttack : ShipState<ShipController>
 {
     public override void Enter(ShipController ShipIn)
     {
+        ShipIn.CurrentState = "Attack";
         if (ShipIn.BB.EnemyShip != null)
         {
             return;
@@ -53,6 +54,7 @@ public class ShipStateRelax : ShipState<ShipController>
 {
     public override void Enter(ShipController ShipIn)
     {
+        ShipIn.CurrentState = "Relax";
         ShipIn.BB.EnemyShip = null;
     }
 
@@ -64,7 +66,7 @@ public class ShipStateRelax : ShipState<ShipController>
         {
             if (PR.EnemyDetected)
             {
-                ShipIn.FSM.ChangeState(new ShipStateRelax());
+                ShipIn.FSM.ChangeState(new ShipStateAttack());
             }
         }
     }

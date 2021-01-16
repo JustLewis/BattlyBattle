@@ -11,6 +11,7 @@ public class ShipController : MonoBehaviour
 
     public ShipStateController<ShipController> FSM;
 
+
     [HideInInspector]
     public List<ShipController> Squads = new List<ShipController>();
 
@@ -26,6 +27,7 @@ public class ShipController : MonoBehaviour
     public List<Vector3> SquadPositions = new List<Vector3>();
 
     public string CurrentBTNode = "";
+    public string CurrentState = "";
 
     [HideInInspector]
     public enum SteeringDesires 
@@ -75,7 +77,6 @@ public class ShipController : MonoBehaviour
     public void Start()
     {
         BT.initialise();
-        FSM.Update();
     }
 
     public void FixedUpdate()

@@ -16,7 +16,7 @@ public class CapitalShipBehaviour : ShipBehavior
         WonderSequence.AddChild(new MoveToTarget(BB));
         WonderSequence.AddChild(new EyesPeeled(BB));
         WonderSequence.AddChild(new SpawnShip(BB));
-        PatrolDecorator WonderRoot = new PatrolDecorator(WonderSequence, BB);
+        WonderDecorator WonderRoot = new WonderDecorator(WonderSequence, BB);
 
         
         CompositeNode AttackSequence = new Sequence(BB);
