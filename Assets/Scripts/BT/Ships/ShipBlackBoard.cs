@@ -8,10 +8,12 @@ public class ShipBlackBoard : MyBlackBoard
     [HideInInspector]
     public ShipController Controller;
 
-    [HideInInspector]
-    public List<Vector3> RouteNodes;
-    [HideInInspector]
-    public int RouteNodeIterator = 0;
+    //Nodes are only really needed for pathfinding. No path finding.s
+    //[HideInInspector]
+    //public List<Vector3> RouteNodes;
+    //[HideInInspector]
+    //public int RouteNodeIterator = 0;
+
     [HideInInspector]
     public float Proximity;
 

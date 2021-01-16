@@ -32,38 +32,3 @@ public class CapitalShipBehaviour : ShipBehavior
         InvokeRepeating("ExecuteBT", 0.1f, 0.1f);
     }
 }
-
-//Some sequences from ShipBehaviour.cs
-
-public class SpawnShip : BTNode
-{
-    ShipBlackBoard BB;
-    public SpawnShip(MyBlackBoard BBin) : base (BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override BTStatus Execute()
-    {
-        BB.Controller.SpawnShip();
-        Debug.Log("Spawned ship");
-        return BTStatus.Success;
-    }
-}
-
-
-public class SquadControl : BTNode
-{
-    ShipBlackBoard BB;
-    public SquadControl(MyBlackBoard BBin) : base(BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override BTStatus Execute()
-    {
-        BB.Controller.GiveSquadLocation(BB.Controller.transform.position);
-        return BTStatus.Success;
-    }
-}
-

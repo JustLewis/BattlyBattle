@@ -19,23 +19,16 @@ public class ShipBehavior : MonoBehaviour
         WonderSequence.AddChild(new NewWonderPosition(BB));
         WonderSequence.AddChild(new MoveToTarget(BB));
         WonderSequence.AddChild(new EyesPeeled(BB));
-        
-        CompositeNode PatrolSequence = new Sequence(BB);
-        PatrolDecorator PatrolRoot = new PatrolDecorator(PatrolSequence, BB);
-        PatrolSequence.AddChild(new GetPatrolRouteDestination(BB));
-        PatrolSequence.AddChild(new MoveToTarget(BB));
-        PatrolSequence.AddChild(new EyesPeeled(BB));
 
-        CompositeNode MoveToSequence = new Sequence(BB);
-        PatrolDecorator MoveToRoot = new PatrolDecorator(MoveToSequence, BB);
-        MoveToSequence.AddChild(new MoveToTarget(BB));
-        MoveToSequence.AddChild(new SquadControl(BB));
-        MoveToSequence.AddChild(new EyesPeeled(BB));
+        CompositeNode AttackSequence = new Sequence(BB);
+        PatrolDecorator AttackRoot = new PatrolDecorator(AttackSequence, BB);
+        AttackSequence.AddChild(new MoveToTarget(BB));
+        AttackSequence.AddChild(new SquadControl(BB));
+        AttackSequence.AddChild(new PursuitNode(BB));
 
         //RootChild.AddChild(PatrolRoot);
         RootChild.AddChild(WonderRoot);
-        RootChild.AddChild(MoveToRoot);
-        RootChild.AddChild(PatrolRoot);
+        RootChild.AddChild(AttackRoot);
 
         InvokeRepeating("ExecuteBT", 0.1f, 0.1f);
     }
@@ -43,194 +36,5 @@ public class ShipBehavior : MonoBehaviour
     public void ExecuteBT()
     {
         RootBTNode.Execute();
-    }
-}
-
-public class NewWonderPosition : BTNode
-{
-    private ShipBlackBoard BB;
-    public NewWonderPosition(MyBlackBoard BBin) : base(BBin) 
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override BTStatus Execute()
-    {
-        Debug.Log("Getting new wonder node");
-       
-        float WonderOffset = BB.Controller.transform.localScale.x * 50.0f;
-        BB.TargetPosition = new Vector3(Random.Range(-WonderOffset, WonderOffset),
-            Random.Range(-WonderOffset, WonderOffset), 
-            Random.Range(-WonderOffset, WonderOffset)) + BB.Controller.transform.position;
-
-        BB.TargetPosition.y = 0.0f;//Just to keep everyone on one plane
-        return BTStatus.Success;
-    }
-}
-
-public class GetPatrolRouteDestination : BTNode
-{
-    private ShipBlackBoard BB;
-
-    public GetPatrolRouteDestination(MyBlackBoard BBin) : base(BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override BTStatus Execute()
-    {
-        Debug.Log("Getting Next Destination in patrol route");
-        if(BB.RouteNodes.Count == 0)
-        {
-            Debug.LogError("ShipBevahior.cs GetPatrolRouteDestination failed as no route for patrol");
-            return BTStatus.Failure;
-        }
-        if(BB.RouteNodeIterator > BB.RouteNodes.Count - 1)
-        {
-            BB.RouteNodeIterator = 0;
-        }
-        BB.TargetPosition = BB.RouteNodes[BB.RouteNodeIterator];
-        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
-        BB.RouteNodeIterator++;
-
-        return BTStatus.Success;
-    }
-}
-
-public class MoveToTarget : BTNode
-{
-    private ShipBlackBoard BB;
-
-    public MoveToTarget(MyBlackBoard BBIn) : base(BBIn)
-    {
-        BB = (ShipBlackBoard)BBIn;
-    }
-
-    public override BTStatus Execute()
-    {
-        //Debug.LogError("Moving to target" + BB.RouteNodeIterator);
-        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
-        BB.Controller.MoveToTarget();
-        return BTStatus.Success;
-    }
-}
-
-public class EyesPeeled : BTNode
-{
-    private ShipBlackBoard BB;
-
-    public EyesPeeled(MyBlackBoard BBin) : base (BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override BTStatus Execute()
-    {
-        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
-
-        //if enemy visible, stop patrol and stuff
-
-
-        //if reached target node.
-        if (Vector3.Distance(BB.TargetPosition, BB.Controller.ControlledShip.transform.position) < BB.Proximity)
-        {
-            return BTStatus.Success;
-        }
-        return BTStatus.Running;
-    }
-}
-
-public class PursuitNode : BTNode
-{
-    private ShipBlackBoard BB;
-
-    public PursuitNode(MyBlackBoard BBin) : base(BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override BTStatus Execute()
-    {
-        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
-        Debug.Log("Moving to target");
-        //if reached target node.
-        if (Vector3.Distance(BB.TargetPosition, BB.Controller.ControlledShip.transform.position) < BB.Proximity)
-        {
-            return BTStatus.Success;
-        }
-        return BTStatus.Running;
-    }
-}
-
-public class PatrolDecorator : ConditionalDecorator
-{
-    private ShipBlackBoard BB;
-
-    public PatrolDecorator(BTNode WrappedNode, MyBlackBoard BBin) : base(WrappedNode,BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override bool CheckStatus()
-    {
-        return true;
-    }
-}
-
-//one shot BTNode, if enemys in radar.
-public class EnemySpottedConditional : ConditionalDecorator
-{
-    ShipBlackBoard BB;
-    public EnemySpottedConditional(BTNode Wrapped, MyBlackBoard BBin) : base(Wrapped, BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override bool CheckStatus()
-    {
-        PerceptionRadar PR = BB.Controller.GetComponent<PerceptionRadar>();
-
-        if (PR == null)
-        {
-            Debug.LogError("No Radar attached to ship");
-            return false;
-        }
-
-        return PR.EnemyDetected;
-    }
-
-}
-
-//one shot BTNode get target
-public class AquireEnemyTarget : BTNode
-{
-    ShipBlackBoard BB;
-
-    public AquireEnemyTarget(MyBlackBoard BBin) : base(BBin)
-    {
-        BB = (ShipBlackBoard)BBin;
-    }
-
-    public override BTStatus Execute()
-    {
-        PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
-        if (PR != null)
-        {
-            BB.EnemyShip = PR.GetEnemyContact();
-            if(BB.EnemyShip == null)
-            {
-                Debug.LogError("Unable to get enemy ship for targetting in AquireEnemy Target");
-                return BTStatus.Failure;
-            }
-            BB.RouteNodes.Clear();
-            BB.TargetPosition = BB.EnemyShip.transform.position;
-            BB.TargetSpeed = BB.EnemyShip.RB.velocity.magnitude;
-
-            return BTStatus.Success;
-        }
-        Debug.LogError("Unable to get perception radar from BB");
-
-        return BTStatus.Failure;
-        
     }
 }

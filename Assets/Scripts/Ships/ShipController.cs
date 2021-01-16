@@ -9,6 +9,8 @@ public class ShipController : MonoBehaviour
     [HideInInspector]
     public ShipBlackBoard BB;
 
+    public ShipStateController<ShipController> FSM;
+
     [HideInInspector]
     public List<ShipController> Squads = new List<ShipController>();
 
@@ -22,6 +24,8 @@ public class ShipController : MonoBehaviour
     public float ClosestPromity;
 
     public List<Vector3> SquadPositions = new List<Vector3>();
+
+    public string CurrentBTNode = "";
 
     [HideInInspector]
     public enum SteeringDesires 
@@ -47,12 +51,16 @@ public class ShipController : MonoBehaviour
         BB.Controller = this;
         BB.Proximity = ClosestPromity;
 
-        BB.RouteNodes = new List<Vector3>();
-        BB.RouteNodes.Add(Vector3.zero);
-        float WonderOffset = 10 * transform.localScale.x;
-        BB.RouteNodes.Add(new Vector3(WonderOffset, 0.0f, WonderOffset));
-        BB.RouteNodes.Add(new Vector3(-WonderOffset, 0.0f, WonderOffset));
-        BB.RouteNodes.Add(new Vector3(WonderOffset, 0.0f, -WonderOffset));
+        FSM = new ShipStateController<ShipController>();
+        FSM.Configure(this, new ShipStateRelax());
+
+        //No longer using nodes.
+        //BB.RouteNodes = new List<Vector3>();
+        //BB.RouteNodes.Add(Vector3.zero);
+        //float WonderOffset = 10 * transform.localScale.x;
+        //BB.RouteNodes.Add(new Vector3(WonderOffset, 0.0f, WonderOffset));
+        //BB.RouteNodes.Add(new Vector3(-WonderOffset, 0.0f, WonderOffset));
+        //BB.RouteNodes.Add(new Vector3(WonderOffset, 0.0f, -WonderOffset));
 
         BT = GetComponent<ShipBehavior>();
         if (BT == null)
@@ -67,17 +75,22 @@ public class ShipController : MonoBehaviour
     public void Start()
     {
         BT.initialise();
+        FSM.Update();
     }
 
     public void FixedUpdate()
     {
+       
         if (!Controlled)
         {
-            MoveToTarget();
+            FSM.Update();
         }
         else 
         { 
         //TODO add control over ship if possessed?
+
+            //Attach camera
+            //Add ability to add force forward, right and left. Rotation is automatic.
         
         }
 
@@ -104,18 +117,14 @@ public class ShipController : MonoBehaviour
 
     public virtual void GiveSquadLocation(Vector3 Pos)
     {
-        int Iterator = 0;
 
         FormationPosition[] FP = GetComponentsInChildren<FormationPosition>();
+        int Iterator = 0;
 
         foreach (ShipController SquadMember in Squads)
         {
-            SquadMember.BB.RouteNodes.Clear();
-            SquadMember.BB.RouteNodeIterator = 0;
-            //SquadMember.BB.RouteNodes.Add(Pos);
-            //SquadMember.BB.TargetPosition = Pos;
-            SquadMember.BB.RouteNodes.Add(FP[Iterator].GetPos());
-            SquadMember.BB.TargetPosition = FP[Iterator].GetPos();
+            
+            SquadMember.BB.TargetPosition = FP[Iterator].GetPos(); //Positions are offset on ship prefab.
 
             Iterator++;
         }

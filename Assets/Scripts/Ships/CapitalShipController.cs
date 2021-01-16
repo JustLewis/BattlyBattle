@@ -11,11 +11,6 @@ public class CapitalShipController : ShipController
     private int SquadCount = 0;
     private ShipController CurrentSquadLeader;
 
-    private void Start()
-    {
-        base.Start();
-    }
-
     public override void SpawnShip()
     {
         if(PrefabToSpawn == null)
@@ -84,9 +79,10 @@ public class CapitalShipController : ShipController
     {
         foreach (ShipController SquadMember in Squads)
         {
-            SquadMember.BB.RouteNodes.Clear();
-            SquadMember.BB.RouteNodeIterator = 0;
-            SquadMember.BB.RouteNodes.Add(Pos);
+            //No longer using nodes.
+            //SquadMember.BB.RouteNodes.Clear();
+            //SquadMember.BB.RouteNodeIterator = 0;
+            //SquadMember.BB.RouteNodes.Add(Pos);
             SquadMember.BB.TargetPosition = Pos;
         }
     }
