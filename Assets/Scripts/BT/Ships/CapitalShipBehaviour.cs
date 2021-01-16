@@ -9,29 +9,31 @@ public class CapitalShipBehaviour : ShipBehavior
     {
         Selector RootChild = new Selector(BB);
         RootBTNode = RootChild;
-        //Some sequences from ShipBehaviour.cs
+        
         CompositeNode WonderSequence = new Sequence(BB);
-        PatrolDecorator WonderRoot = new PatrolDecorator(WonderSequence, BB);
         WonderSequence.AddChild(new NewWonderPosition(BB));
-        WonderSequence.AddChild(new SpawnShip(BB));
         WonderSequence.AddChild(new SquadControl(BB));
         WonderSequence.AddChild(new MoveToTarget(BB));
         WonderSequence.AddChild(new EyesPeeled(BB));
+        WonderSequence.AddChild(new SpawnShip(BB));
+        PatrolDecorator WonderRoot = new PatrolDecorator(WonderSequence, BB);
 
-        CompositeNode PatrolSequence = new Sequence(BB);
-        PatrolDecorator PatrolRoot = new PatrolDecorator(PatrolSequence, BB);
-        PatrolSequence.AddChild(new GetPatrolRouteDestination(BB));
-        PatrolSequence.AddChild(new MoveToTarget(BB));
-        PatrolSequence.AddChild(new EyesPeeled(BB));
+        
+        CompositeNode AttackSequence = new Sequence(BB);
+        AttackSequence.AddChild(new AquireEnemyTarget(BB));
+        AttackSequence.AddChild(new SquadControl(BB));
+        AttackSequence.AddChild(new PursuitNode(BB));
+        EnemySpottedConditional AttackRoot = new EnemySpottedConditional(AttackSequence, BB);
 
-
-        //RootChild.AddChild(PatrolRoot);
         RootChild.AddChild(WonderRoot);
-        //RootChild.AddChild(PatrolRoot);
+        RootChild.AddChild(AttackRoot);
+  
 
         InvokeRepeating("ExecuteBT", 0.1f, 0.1f);
     }
 }
+
+//Some sequences from ShipBehaviour.cs
 
 public class SpawnShip : BTNode
 {
@@ -64,3 +66,4 @@ public class SquadControl : BTNode
         return BTStatus.Success;
     }
 }
+

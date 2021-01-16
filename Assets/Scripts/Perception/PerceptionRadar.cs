@@ -10,11 +10,13 @@ public class PerceptionRadar : MonoBehaviour
 {
     private float RadarRange;
 
-   //public List<Ship> VisibleTargets; // No need for this.
 
     public bool ShowRadar;
 
-    //public SphereCollider Radar;
+
+
+    [HideInInspector]
+    public bool EnemyDetected = false;
 
     public Dictionary<Ship, RadarMemoryRecord> RadarMem = new Dictionary<Ship, RadarMemoryRecord>();
 
@@ -22,72 +24,85 @@ public class PerceptionRadar : MonoBehaviour
     void Start()
     {
         RadarRange = GetComponent<ShipController>().ClosestPromity * 15;
-        //Radar.radius = RadarRange;
+        EnemyDetected = false;
 
         InvokeRepeating("Beep", 0.10f, 0.10f);
     }
 
-
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         Color Col = Color.blue;
         Col.a = 0.3f;
         Gizmos.color = Col;
         Gizmos.DrawSphere(transform.position, RadarRange);
     }
+    private void OnDrawGizmos()
+    {
+        Color Col = Color.black;
+        Col.a = 0.025f;
+        Gizmos.color = Col;
+        Gizmos.DrawSphere(transform.position, RadarRange);
+    }
 
     void Beep()
     {
-        //VisibleTargets.Clear();
 
+        int TeamID = GetComponent<ShipBlackBoard>().TeamID;
         Collider[] Targets = Physics.OverlapSphere(transform.position, RadarRange);
 
 
         foreach (Collider Targ in Targets)
         {
             Ship SC = Targ.gameObject.GetComponent<Ship>();
-            if(SC != null)
+            if(SC != null && SC != GetComponent<Ship>())
             {
-                RadarMemoryRecord Rec = new RadarMemoryRecord(Time.time, SC.transform.position, SC.RB.velocity, SC.Controller.BB.TeamID);
+
+                RadarMemoryRecord Rec = new RadarMemoryRecord(SC,Time.time, SC.transform.position, SC.RB.velocity, SC.Controller.BB.TeamID);
                 if (RadarMem.ContainsKey(SC)) 
                 {
-                    //Debug.LogError("Updating record");
-                    //RadarMem[SC] = Rec;
+                    RadarMem[SC] = Rec;
                 }
                 else
                 {
                     RadarMem.Add(SC,Rec);
-                    Debug.Log("Adding record");
                 }
-                //VisibleTargets.Add(SC);
             }
         }
-
-        int TeamID = GetComponent<ShipBlackBoard>().TeamID;
-        int iterator =0;
+        EnemyDetected = false;
+        
         foreach (RadarMemoryRecord Rad in RadarMem.Values)
         {
-            if(Rad.TimeLastSeen - Time.time > 5.0f)
+            //As time since last seen goes up, over 10 seconds, set multiplyer to show how old record is.
+            float TimeFactor = 1.0f - Mathf.Clamp((Time.time - Rad.TimeLastSeen) / 10.0f, 0.0f, 1.0f);
+            if (TimeFactor <= 0.0001f) 
             {
-                //TODO figure out how to remove.
-                //RadarMem.Remove(Rad)
+                //don't bother doing anything if memory is too old.
+                continue;
             }
-            iterator++;
+
             if (Rad.LastSeenTeam == TeamID)
             {
-                Debug.DrawLine(transform.position, Rad.LastSeenPosition + Rad.LastSeenVelocity * (Rad.TimeLastSeen - Time.time), Color.green, 0.10f, false);
-                Debug.Log("Drawing Green");
+                Debug.DrawLine(transform.position, Rad.LastSeenPosition + Rad.LastSeenVelocity * (Rad.TimeLastSeen - Time.time), Color.green * TimeFactor, 0.10f, false);
+                EnemyDetected = true;
             }
             else if (Rad.LastSeenTeam != TeamID)
             {
-                Debug.DrawLine(transform.position, Rad.LastSeenPosition + Rad.LastSeenVelocity * (Rad.TimeLastSeen - Time.time), Color.red, 0.10f, false);
-                Debug.Log("Drawing red");
-            }
-            else
-            {
-                Debug.Log("Ignoring. Team is " + Rad.LastSeenTeam);
+                Debug.DrawLine(transform.position, Rad.LastSeenPosition + Rad.LastSeenVelocity * (Rad.TimeLastSeen - Time.time), Color.red * TimeFactor, 0.10f, false);
             }
         }
+    }
+
+    public Ship GetEnemyContact()
+    {
+        int TeamID = GetComponent<ShipBlackBoard>().TeamID;
+        foreach (RadarMemoryRecord Rad in RadarMem.Values)
+        {
+            if(Rad.LastSeenTeam != TeamID)
+            {
+                return Rad.ShipID;
+            }
+        }
+        return null;
     }
 }
 
@@ -95,6 +110,9 @@ public class PerceptionRadar : MonoBehaviour
 [Serializable]
 public class RadarMemoryRecord
 {
+    [SerializeField]
+    public Ship ShipID;
+
     [SerializeField]
     public float TimeLastSeen;
 
@@ -109,14 +127,16 @@ public class RadarMemoryRecord
 
     public RadarMemoryRecord()
     {
+        ShipID = null;
         TimeLastSeen = 0.0f;
         LastSeenPosition = Vector3.zero;
         LastSeenVelocity = Vector3.zero;
         LastSeenTeam = -1;
     }
 
-    public RadarMemoryRecord(float time, Vector3 pos, Vector3 vel, int team)
+    public RadarMemoryRecord(Ship ship, float time, Vector3 pos, Vector3 vel, int team)
     {
+        ShipID = ship;
         TimeLastSeen = time;
         LastSeenPosition = pos;
         LastSeenVelocity = vel;

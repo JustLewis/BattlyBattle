@@ -29,6 +29,7 @@ public class ShipBehavior : MonoBehaviour
         CompositeNode MoveToSequence = new Sequence(BB);
         PatrolDecorator MoveToRoot = new PatrolDecorator(MoveToSequence, BB);
         MoveToSequence.AddChild(new MoveToTarget(BB));
+        MoveToSequence.AddChild(new SquadControl(BB));
         MoveToSequence.AddChild(new EyesPeeled(BB));
 
         //RootChild.AddChild(PatrolRoot);
@@ -139,6 +140,28 @@ public class EyesPeeled : BTNode
     }
 }
 
+public class PursuitNode : BTNode
+{
+    private ShipBlackBoard BB;
+
+    public PursuitNode(MyBlackBoard BBin) : base(BBin)
+    {
+        BB = (ShipBlackBoard)BBin;
+    }
+
+    public override BTStatus Execute()
+    {
+        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
+        Debug.Log("Moving to target");
+        //if reached target node.
+        if (Vector3.Distance(BB.TargetPosition, BB.Controller.ControlledShip.transform.position) < BB.Proximity)
+        {
+            return BTStatus.Success;
+        }
+        return BTStatus.Running;
+    }
+}
+
 public class PatrolDecorator : ConditionalDecorator
 {
     private ShipBlackBoard BB;
@@ -154,3 +177,60 @@ public class PatrolDecorator : ConditionalDecorator
     }
 }
 
+//one shot BTNode, if enemys in radar.
+public class EnemySpottedConditional : ConditionalDecorator
+{
+    ShipBlackBoard BB;
+    public EnemySpottedConditional(BTNode Wrapped, MyBlackBoard BBin) : base(Wrapped, BBin)
+    {
+        BB = (ShipBlackBoard)BBin;
+    }
+
+    public override bool CheckStatus()
+    {
+        PerceptionRadar PR = BB.Controller.GetComponent<PerceptionRadar>();
+
+        if (PR == null)
+        {
+            Debug.LogError("No Radar attached to ship");
+            return false;
+        }
+
+        return PR.EnemyDetected;
+    }
+
+}
+
+//one shot BTNode get target
+public class AquireEnemyTarget : BTNode
+{
+    ShipBlackBoard BB;
+
+    public AquireEnemyTarget(MyBlackBoard BBin) : base(BBin)
+    {
+        BB = (ShipBlackBoard)BBin;
+    }
+
+    public override BTStatus Execute()
+    {
+        PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
+        if (PR != null)
+        {
+            BB.EnemyShip = PR.GetEnemyContact();
+            if(BB.EnemyShip == null)
+            {
+                Debug.LogError("Unable to get enemy ship for targetting in AquireEnemy Target");
+                return BTStatus.Failure;
+            }
+            BB.RouteNodes.Clear();
+            BB.TargetPosition = BB.EnemyShip.transform.position;
+            BB.TargetSpeed = BB.EnemyShip.RB.velocity.magnitude;
+
+            return BTStatus.Success;
+        }
+        Debug.LogError("Unable to get perception radar from BB");
+
+        return BTStatus.Failure;
+        
+    }
+}

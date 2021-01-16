@@ -33,11 +33,19 @@ public class CapitalShipController : ShipController
             Squads.Add(SC);
             CurrentSquadLeader = SC;
             SquadCount = SquadSize;
-            StartCoroutine(SetSquadLeaderCR(SC));
+            //StartCoroutine(SetSquadLeaderCR(SC));
+            CurrentSquadLeader = SC;
+            SC.BB.TeamID = BB.TeamID;
+            SC.TeamColour = TeamColour;
+            SC.ControlledShip.SetColour();
         }
         else
         {
-            StartCoroutine(SetSquadMemberCR(SC));
+            //StartCoroutine(SetSquadMemberCR(SC));
+            CurrentSquadLeader.Squads.Add(SC);
+            SC.BB.TeamID = BB.TeamID;
+            SC.TeamColour = TeamColour;
+            SC.ControlledShip.SetColour();
             SquadCount--;
         }
 
@@ -49,7 +57,7 @@ public class CapitalShipController : ShipController
         if(!Tick)
         {
             Tick = !Tick;
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForEndOfFrame();
         }
         CurrentSquadLeader.Squads.Add(SCIn);
         SCIn.BB.TeamID = BB.TeamID;
@@ -64,7 +72,7 @@ public class CapitalShipController : ShipController
         if (!Tick)
         {
             Tick = !Tick;
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForEndOfFrame();
         }
         CurrentSquadLeader = SCIn;
         SCIn.BB.TeamID = BB.TeamID;

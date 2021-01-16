@@ -10,7 +10,7 @@ public class AvoidCollision : SteeringBehaviourBase
 
     List<GameObject> DetectedObjects = new List<GameObject>();
 
-    public void Start()
+    public void awake()
     {
         DetectionBox = GetComponent<BoxCollider>();
         DetectionBox.size = StartDetectionBoxSize;

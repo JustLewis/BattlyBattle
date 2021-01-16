@@ -23,8 +23,7 @@ public class Ship : MonoBehaviour
     private SgtPosition Pos;
     private SgtCameraMove Cam;
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
         Controller = GetComponent<ShipController>();
         MR = GetComponentInChildren<MeshRenderer>();
@@ -41,17 +40,32 @@ public class Ship : MonoBehaviour
         MaxForce = ScaleOffset * 10;
 
         MR.material.SetColor("_Color", Controller.TeamColour);
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        //Controller = GetComponent<ShipController>();
+        //MR = GetComponentInChildren<MeshRenderer>();
+        //RB = GetComponent<Rigidbody>();
+
+        //Cam = GetComponent<SgtCameraMove>();
+        //shipTail = GetComponentInChildren<ShipTail>();
+
+        ////crude way to make a balanced set of movement stuff.
+        //float ScaleOffset = 2 / transform.localScale.x;
+        ////TurnSpeed = ScaleOffset; 
+        //MaxSpeed = MaxSpeed * ScaleOffset;
+        //RB.mass = ScaleOffset * 10;
+        //MaxForce = ScaleOffset * 10;
+
+        //MR.material.SetColor("_Color", Controller.TeamColour);
 
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-
-        if (!Controller.Moving) //slow when not adding any force
-        {
-            RB.velocity *= 0.9f * Time.deltaTime;
-        }
 
         if (shipTail != null)
         {

@@ -13,8 +13,6 @@ public class ShipController : MonoBehaviour
     public List<ShipController> Squads = new List<ShipController>();
 
     public bool Controlled;
-    [HideInInspector]
-    public bool Moving = false;
 
     public Color TeamColour;
 
@@ -40,10 +38,6 @@ public class ShipController : MonoBehaviour
     public void Awake()
     {
         ControlledShip = GetComponent<Ship>();
-    }
-
-    public void Start()
-    {
         BB = GetComponent<ShipBlackBoard>();
         if (BB == null)
         {
@@ -68,14 +62,23 @@ public class ShipController : MonoBehaviour
         }
 
         BT.BB = BB;
+    }
+
+    public void Start()
+    {
         BT.initialise();
     }
 
     public void FixedUpdate()
     {
-        if (Moving && !Controlled)
+        if (!Controlled)
         {
             MoveToTarget();
+        }
+        else 
+        { 
+        //TODO add control over ship if possessed?
+        
         }
 
     }
@@ -95,7 +98,6 @@ public class ShipController : MonoBehaviour
 
         ControlledShip.MoveToTarget(DesiredVelocity);
         
-        Moving = true;
     }
 
     public virtual void SpawnShip() { }
