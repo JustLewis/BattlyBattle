@@ -11,14 +11,14 @@ public class PerceptionRadar : MonoBehaviour
     private float RadarRange;
 
 
-    public bool ShowRadar;
-
-
+    public bool RadarMagnifyForDebug;
 
     [HideInInspector]
     public bool EnemyDetected = false;
 
     public Dictionary<Ship, RadarMemoryRecord> RadarMem = new Dictionary<Ship, RadarMemoryRecord>();
+
+    public float TimeUntilIgnored = 5.0f;
 
 
     void Start()
@@ -46,9 +46,15 @@ public class PerceptionRadar : MonoBehaviour
 
     void Beep()
     {
+        float RadarDebugRangeMult = 1.0f;
+        if(RadarMagnifyForDebug)
+        {
+            RadarDebugRangeMult = 100.0f;
+            RadarMagnifyForDebug = false;
+        }
 
         int TeamID = GetComponent<ShipBlackBoard>().TeamID;
-        Collider[] Targets = Physics.OverlapSphere(transform.position, RadarRange);
+        Collider[] Targets = Physics.OverlapSphere(transform.position, RadarRange * RadarDebugRangeMult);
 
 
         foreach (Collider Targ in Targets)
@@ -71,9 +77,8 @@ public class PerceptionRadar : MonoBehaviour
         EnemyDetected = false;
         
         foreach (RadarMemoryRecord Rad in RadarMem.Values)
-        {
-            //As time since last seen goes up, over 10 seconds, set multiplyer to show how old record is.
-            float TimeFactor = 1.0f - Mathf.Clamp((Time.time - Rad.TimeLastSeen) / 10.0f, 0.0f, 1.0f);
+        { 
+            float TimeFactor = 1.0f - Mathf.Clamp((Time.time - Rad.TimeLastSeen) / TimeUntilIgnored, 0.0f, 1.0f);
             if (TimeFactor <= 0.0001f) 
             {
                 //don't bother doing anything if memory is too old.
@@ -92,17 +97,20 @@ public class PerceptionRadar : MonoBehaviour
         }
     }
 
-    public Ship GetEnemyContact()
+    public RadarMemoryRecord GetLastEnemyContact()
     {
-        int TeamID = GetComponent<ShipBlackBoard>().TeamID;
-        foreach (RadarMemoryRecord Rad in RadarMem.Values)
+        int TeamID = GetComponent <ShipBlackBoard>().TeamID;
+        RadarMemoryRecord RetVal = null;
+        float TimeSeen = Time.time - 10.0f;
+        foreach(RadarMemoryRecord Rad in RadarMem.Values)
         {
-            if(Rad.LastSeenTeam != TeamID)
+            if(Rad.LastSeenTeam != TeamID && Rad.TimeLastSeen > TimeSeen)
             {
-                return Rad.ShipID;
+                RetVal = Rad;
+                TimeSeen = Rad.TimeLastSeen;
             }
         }
-        return null;
+        return RetVal;
     }
 }
 

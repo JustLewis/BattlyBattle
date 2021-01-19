@@ -7,9 +7,7 @@ public class MyBlackBoard : MonoBehaviour
 
     //useful basic stuff
     public Vector3 TargetPosition;
-    [HideInInspector]
-    public Vector3 TargetDirection;
-    [HideInInspector]
-    public float TargetSpeed;
+    public Vector3 TargetVelocity;
+    //public Vector3 TargetDirection;
 
 }

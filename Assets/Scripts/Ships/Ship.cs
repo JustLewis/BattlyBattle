@@ -36,31 +36,10 @@ public class Ship : MonoBehaviour
         float ScaleOffset = 2 / transform.localScale.x;
         //TurnSpeed = ScaleOffset; 
         MaxSpeed = MaxSpeed * ScaleOffset;
-        RB.mass = ScaleOffset * 10;
-        MaxForce = ScaleOffset * 10;
+        RB.mass = 1.0f * ScaleOffset * 10;
+        MaxForce = 9.0f * ScaleOffset * 10;
 
         MR.material.SetColor("_Color", Controller.TeamColour);
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        //Controller = GetComponent<ShipController>();
-        //MR = GetComponentInChildren<MeshRenderer>();
-        //RB = GetComponent<Rigidbody>();
-
-        //Cam = GetComponent<SgtCameraMove>();
-        //shipTail = GetComponentInChildren<ShipTail>();
-
-        ////crude way to make a balanced set of movement stuff.
-        //float ScaleOffset = 2 / transform.localScale.x;
-        ////TurnSpeed = ScaleOffset; 
-        //MaxSpeed = MaxSpeed * ScaleOffset;
-        //RB.mass = ScaleOffset * 10;
-        //MaxForce = ScaleOffset * 10;
-
-        //MR.material.SetColor("_Color", Controller.TeamColour);
-
     }
 
     // Update is called once per frame

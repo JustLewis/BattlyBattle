@@ -11,18 +11,21 @@ public class CapitalShipBehaviour : ShipBehavior
         RootBTNode = RootChild;
         
         CompositeNode WonderSequence = new Sequence(BB);
+        WonderSequence.AddChild(new SetRelaxedState(BB));
         WonderSequence.AddChild(new NewWonderPosition(BB));
         WonderSequence.AddChild(new SquadControl(BB));
-        WonderSequence.AddChild(new MoveToTarget(BB));
         WonderSequence.AddChild(new EyesPeeled(BB));
         WonderSequence.AddChild(new SpawnShip(BB));
+        WonderSequence.AddChild(new WaitNode(BB, 2.0f));
         WonderDecorator WonderRoot = new WonderDecorator(WonderSequence, BB);
 
         
         CompositeNode AttackSequence = new Sequence(BB);
+        WonderSequence.AddChild(new SetAttackState(BB));
         AttackSequence.AddChild(new AquireEnemyTarget(BB));
+        AttackSequence.AddChild(new PanicSpawn(BB));
         AttackSequence.AddChild(new SquadControl(BB));
-        AttackSequence.AddChild(new CapitalPursuitNode(BB));
+        AttackSequence.AddChild(new PursuitNode(BB));
         EnemySpottedConditional AttackRoot = new EnemySpottedConditional(AttackSequence, BB);
 
         RootChild.AddChild(WonderRoot);

@@ -6,7 +6,7 @@ public class CapitalShipController : ShipController
 {
 
     public GameObject PrefabToSpawn;
-    public int SquadSize = 5;
+    public int SquadSize = 10;
     public int SquadMax = 3;
 
     private int SquadCount = 0;
@@ -21,17 +21,25 @@ public class CapitalShipController : ShipController
                 Debug.LogError("No ship to spawn in " + this.name);
                 return;
             }
+            float Zoffset = 8.0f * transform.localScale.x;
 
-            Vector3 SpawnPos = transform.position + new Vector3(4.0f * ControlledShip.transform.localScale.x, 0, 0);
-            Debug.Log("Controlled ship local scale x is " + ControlledShip.transform.localScale.x);
+            Zoffset = Random.Range(-Zoffset, Zoffset);
+
+            Vector3 SpawnPos = transform.position + new Vector3(4.0f * ControlledShip.transform.localScale.x, 0, Zoffset);
+            //GameObject Obj = Instantiate(PrefabToSpawn, SpawnPos, transform.rotation);
             GameObject Obj = Instantiate(PrefabToSpawn, SpawnPos, transform.rotation);
             ShipController SC = Obj.GetComponent<ShipController>();
+            
+            SC.BB.TargetPosition = BB.TargetPosition;
+            SC.BB.TargetVelocity = BB.TargetVelocity;
+            SC.BB.EnemyShip = BB.EnemyShip;
+
             if (SquadCount <= 0)
             {
                 Squads.Add(SC);
+                SC.gameObject.name = "Squad Leader";
                 CurrentSquadLeader = SC;
                 SquadCount = SquadSize;
-                //StartCoroutine(SetSquadLeaderCR(SC));
                 CurrentSquadLeader = SC;
                 SC.BB.TeamID = BB.TeamID;
                 SC.TeamColour = TeamColour;
@@ -39,7 +47,6 @@ public class CapitalShipController : ShipController
             }
             else
             {
-                //StartCoroutine(SetSquadMemberCR(SC));
                 CurrentSquadLeader.Squads.Add(SC);
                 SC.BB.TeamID = BB.TeamID;
                 SC.TeamColour = TeamColour;
@@ -50,44 +57,12 @@ public class CapitalShipController : ShipController
 
     }
 
-    public IEnumerator SetSquadMemberCR(ShipController SCIn)
-    {
-        bool Tick = false;
-        if(!Tick)
-        {
-            Tick = !Tick;
-            yield return new WaitForEndOfFrame();
-        }
-        CurrentSquadLeader.Squads.Add(SCIn);
-        SCIn.BB.TeamID = BB.TeamID;
-        SCIn.TeamColour = TeamColour;
-        SCIn.ControlledShip.SetColour();
-        yield return null;
-    }
-
-    public IEnumerator SetSquadLeaderCR(ShipController SCIn)
-    {
-        bool Tick = false;
-        if (!Tick)
-        {
-            Tick = !Tick;
-            yield return new WaitForEndOfFrame();
-        }
-        CurrentSquadLeader = SCIn;
-        SCIn.BB.TeamID = BB.TeamID;
-        SCIn.TeamColour = TeamColour;
-        SCIn.ControlledShip.SetColour();
-        yield return null;
-    }
     public override void GiveSquadLocation(Vector3 Pos)
     {
         foreach (ShipController SquadMember in Squads)
         {
-            //No longer using nodes.
-            //SquadMember.BB.RouteNodes.Clear();
-            //SquadMember.BB.RouteNodeIterator = 0;
-            //SquadMember.BB.RouteNodes.Add(Pos);
             SquadMember.BB.TargetPosition = Pos;
+            SquadMember.GiveSquadLocation(Pos);
         }
     }
 }

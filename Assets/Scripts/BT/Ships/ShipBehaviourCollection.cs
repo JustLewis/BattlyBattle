@@ -2,6 +2,39 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public class SetRelaxedState : BTNode
+{
+    private ShipBlackBoard BB;
+
+    public SetRelaxedState(MyBlackBoard BBin) : base(BBin)
+    {
+        BB = (ShipBlackBoard)BBin;
+    }
+
+    public override BTStatus Execute()
+    {
+        BB.Controller.FSM.ChangeState(new ShipStateRelax());
+        return BTStatus.Success;
+    }
+}
+
+public class SetAttackState : BTNode
+{
+    private ShipBlackBoard BB;
+
+    public SetAttackState(MyBlackBoard BBin) : base(BBin)
+    {
+        BB = (ShipBlackBoard)BBin;
+    }
+
+    public override BTStatus Execute()
+    {
+        BB.Controller.FSM.ChangeState(new ShipStateAttack());
+        return BTStatus.Success;
+    }
+}
+
 /// <summary>
 /// Standard BT node
 /// Get a random wonder position relative tothe location of the ship.
@@ -19,67 +52,66 @@ public class NewWonderPosition : BTNode
         Debug.Log("Getting new wonder node");
 
         float WonderOffset = BB.Controller.transform.localScale.x * 50.0f;
-        BB.TargetPosition = new Vector3(Random.Range(-WonderOffset, WonderOffset),
+
+        Vector3 DesiredPos = new Vector3(Random.Range(-WonderOffset, WonderOffset),
             Random.Range(-WonderOffset, WonderOffset),
             Random.Range(-WonderOffset, WonderOffset)) + BB.Controller.transform.position;
 
-        //BB.TargetPosition.y = 0.0f;//Just to keep everyone on one plane
+        BB.Controller.SetBBTarget(null, DesiredPos, Vector3.zero);
         BB.Controller.CurrentBTNode = "NewWonderPosition";
+        BB.Controller.FSM.ChangeState(new ShipStateRelax());
         return BTStatus.Success;
     }
 }
 
-//No longer used
-//public class GetPatrolRouteDestination : BTNode
-//{
-//    private ShipBlackBoard BB;
-
-//    public GetPatrolRouteDestination(MyBlackBoard BBin) : base(BBin)
-//    {
-//        BB = (ShipBlackBoard)BBin;
-//    }
-
-//    public override BTStatus Execute()
-//    {
-//        Debug.LogError("Patrol nodes no longer used. Should not be able to get to this behaviour (GetPatrolRouteDestination)");
-//        if (BB.RouteNodes.Count == 0)
-//        {
-//            Debug.LogError("ShipBevahior.cs GetPatrolRouteDestination failed as no route for patrol");
-//            return BTStatus.Failure;
-//        }
-//        if (BB.RouteNodeIterator > BB.RouteNodes.Count - 1)
-//        {
-//            BB.RouteNodeIterator = 0;
-//        }
-//        BB.TargetPosition = BB.RouteNodes[BB.RouteNodeIterator];
-//        BB.TargetDirection = Vector3.Normalize(bb.TargetPosition - BB.Controller.transform.position);
-//        BB.RouteNodeIterator++;
-
-//        //Returning success here to move onto next tree node.
-//        return BTStatus.Success;
-//    }
-//}
-
-/// <summary>
-/// Standard BT node, Sets the position to move to and moves on.
-/// </summary>
-public class MoveToTarget : BTNode
+//Standard node, wait for random time between 1 and 5 or set time
+public class WaitNode : BTNode
 {
     private ShipBlackBoard BB;
 
-    public MoveToTarget(MyBlackBoard BBIn) : base(BBIn)
+    float TimeToStopWaiting;
+
+    public WaitNode(MyBlackBoard BBIn, float TimeToWaitInSecs) : base (BBIn)
     {
-        BB = (ShipBlackBoard)BBIn;
+        BB = (ShipBlackBoard)BBin;
+        BB.Controller.FSM.ChangeState(new ShipStateRelaxStop());
+        TimeToStopWaiting = Time.time + TimeToWaitInSecs;
+    }
+    public WaitNode(MyBlackBoard BBIn) : base(BBIn)
+    {
+        BB = (ShipBlackBoard)BBin;
+        BB.Controller.FSM.ChangeState(new ShipStateRelaxStop());
+        TimeToStopWaiting = Time.time + Random.Range(1.0f, 5.0f);
     }
 
     public override BTStatus Execute()
     {
-        BB.Controller.CurrentBTNode = "MoveToTarget";
-        //Debug.LogError("Moving to target" + BB.RouteNodeIterator);
-        BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position);
-        return BTStatus.Success;
+        PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
+
+        BTStatus RetValue = BTStatus.Failure;
+        if(TimeToStopWaiting <= Time.time)
+        {
+            RetValue = BTStatus.Success;
+            return RetValue;
+        }
+        else if (PR != null)
+        {
+            if (PR.EnemyDetected)
+            {
+                RetValue = BTStatus.Failure;
+                return RetValue;
+            }
+        }
+        else if(TimeToStopWaiting > Time.time)
+        { 
+            RetValue = BTStatus.Running;
+            return RetValue;
+        }
+        return RetValue;
+
     }
 }
+
 
 /// <summary>
 /// Standar BT node. Runs while moving to the target position, eyes peeled meaning if it detects an emeny, it exists this sequence.
@@ -96,7 +128,6 @@ public class EyesPeeled : BTNode
     public override BTStatus Execute()
     {
         BB.Controller.CurrentBTNode = "Eyes peeled";
-        BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position); //Updating direction to target.
 
         //if enemy visible, stop patrol and stuff
         PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
@@ -138,55 +169,58 @@ public class PursuitNode : BTNode
         if (BB.EnemyShip == null)
         {
             Debug.LogError("Supposed to chase enemy but no enemy in BB");
-            return BTStatus.Failure;
+            return BTStatus.Failure; //to exit attack mode.
         }
-        if (BB.EnemyShip != null)
+
+        PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
+        if(PR == null)
         {
-            BB.TargetPosition = BB.EnemyShip.transform.position;
-            BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position);
-            Debug.Log("Chasing target");
+            Debug.LogError("No radar attached to ship.");
+        }
+        if(PR != null)
+        {
+            RadarMemoryRecord RMR;
+            if(PR.RadarMem.TryGetValue(BB.EnemyShip,out RMR))
+            {
+                if (RMR.TimeLastSeen + PR.TimeUntilIgnored < Time.time)
+                {
+                    Debug.Log("Time last seen contact too long ago");
+                    BB.Controller.SetBBTargetRadarOnly(RMR);
+                    return BTStatus.Success;
+                }
+            }
         }
         //if close to enemy. 
         if (Vector3.Distance(BB.TargetPosition, BB.Controller.ControlledShip.transform.position) < BB.Proximity)
         {
             return BTStatus.Success;
         }
+        BB.Controller.SpawnShip();//just for capital ship.
         return BTStatus.Running;
     }
 }
-public class CapitalPursuitNode : BTNode
-{
-    private ShipBlackBoard BB;
 
-    public CapitalPursuitNode(MyBlackBoard BBin) : base(BBin)
+public class PanicSpawn : BTNode
+{
+    ShipBlackBoard BB;
+
+    public PanicSpawn(MyBlackBoard BBin) : base(BBin)
     {
         BB = (ShipBlackBoard)BBin;
     }
 
     public override BTStatus Execute()
     {
-        BB.Controller.CurrentBTNode = "Pursuit";
-        if (BB.EnemyShip == null)
+        //Rubbish way to get capital ship to spawn ships for assault.
+        for (int i = 0; i < 10; i++)
         {
-            Debug.LogError("Supposed to chase enemy but no enemy in BB");
-            return BTStatus.Failure;
+            BB.Controller.SpawnShip();
         }
-        if (BB.EnemyShip != null)
-        {
-            BB.TargetPosition = BB.EnemyShip.transform.position;
-            BB.TargetDirection = Vector3.Normalize(BB.TargetPosition - BB.Controller.transform.position);
-            Debug.Log("Chasing target");
-        }
-        //if close to enemy. 
-        if (Vector3.Distance(BB.TargetPosition, BB.Controller.ControlledShip.transform.position) < BB.Proximity)
-        {
-            return BTStatus.Success;
-        }
-        BB.Controller.SpawnShip();
 
-        return BTStatus.Running;
+        return BTStatus.Success;
     }
 }
+
 
 /// <summary>
 /// Wonder behaviour root. While this is true, keep wondering.
@@ -209,7 +243,7 @@ public class WonderDecorator : ConditionalDecorator
             return true; //keep going with current sequence.
         }
 
-        BB.Controller.CurrentBTNode = "patrol Decorator";
+        BB.Controller.CurrentBTNode = "Wonder Decorator";
         return !PR.EnemyDetected; //If enemy detected, exit wonder behaviour. 
     }
 }
@@ -254,15 +288,13 @@ public class AquireEnemyTarget : BTNode
         PerceptionRadar PR = BB.GetComponent<PerceptionRadar>();
         if (PR != null)
         {
-            BB.EnemyShip = PR.GetEnemyContact();
-            if (BB.EnemyShip == null)
+            RadarMemoryRecord RMR = BB.Controller.GetLastEnemyContact();
+            if (RMR == null)
             {
                 Debug.LogError("Unable to get enemy ship for targetting in AquireEnemy Target");
                 return BTStatus.Failure;
             }
-            //BB.RouteNodes.Clear(); //no longer using nodes
-            BB.TargetPosition = BB.EnemyShip.transform.position;
-            BB.TargetSpeed = BB.EnemyShip.RB.velocity.magnitude;
+            BB.Controller.SetBBTarget(RMR);
 
             return BTStatus.Success;
         }
@@ -272,8 +304,6 @@ public class AquireEnemyTarget : BTNode
 
     }
 }
-
-
 
 public class SpawnShip : BTNode
 {

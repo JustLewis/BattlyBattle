@@ -29,16 +29,21 @@ public class ShipController : MonoBehaviour
     public string CurrentBTNode = "";
     public string CurrentState = "";
 
+    private PerceptionRadar Radar;
+
+    public bool SpawnAShip;
+
     [HideInInspector]
     public enum SteeringDesires 
     { 
         Seek = 0,
         Arrive = 1,
         Flee = 2,
-        Pursuit = 3
+        Pursuit = 3,
+        Group = 4,
     }
 
-    private float[] SteeringDesireFloats = {1.0f,0,0,0};
+    private float[] SteeringDesireFloats = {1.0f,0.0f,0.0f,0.0f,0.0f};
 
 
     public void Awake()
@@ -55,6 +60,12 @@ public class ShipController : MonoBehaviour
 
         FSM = new ShipStateController<ShipController>();
         FSM.Configure(this, new ShipStateRelax());
+
+        Radar = GetComponent<PerceptionRadar>();
+        if (Radar == null)
+        {
+            Debug.LogError("No radar found on ship");
+        }
 
         //No longer using nodes.
         //BB.RouteNodes = new List<Vector3>();
@@ -77,6 +88,10 @@ public class ShipController : MonoBehaviour
     public void Start()
     {
         BT.initialise();
+        for (int i = 0; i < 5; i ++)
+        {
+            SpawnShip();
+        }
     }
 
     public void FixedUpdate()
@@ -95,6 +110,12 @@ public class ShipController : MonoBehaviour
         
         }
 
+        if(SpawnAShip)
+        {
+            SpawnShip();
+            SpawnAShip = false;
+        }
+
     }
 
     public void MoveToTargetRelaxed()
@@ -111,15 +132,15 @@ public class ShipController : MonoBehaviour
         }
        
 
-        ControlledShip.MoveToTarget(DesiredVelocity * 0.5f); //just to give some relaxed movement for now.
+        ControlledShip.MoveToTarget(DesiredVelocity.normalized); //just to give some relaxed movement for now.
         
     }
 
     public void MoveToTargetAttack()
     {
 
-        SteeringDesireFloats[(int)SteeringDesires.Seek] = Mathf.Clamp(Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) / (BB.Proximity), 0.0f, 1.0f);
-        SteeringDesireFloats[(int)SteeringDesires.Arrive] = 1.0f - SteeringDesireFloats[(int)SteeringDesires.Seek];
+        SteeringDesireFloats[(int)SteeringDesires.Seek] = 0.0f;// Only interested in pursuit and stuff// Mathf.Clamp(Vector3.Distance(BB.Controller.transform.position, BB.TargetPosition) / (BB.Proximity), 0.0f, 1.0f);
+        SteeringDesireFloats[(int)SteeringDesires.Arrive] = 0.0f;// Only interested in pursuit and stuff // 1.0f - SteeringDesireFloats[(int)SteeringDesires.Seek];
 
         Vector3 DesiredVelocity = Vector3.zero;
 
@@ -128,7 +149,7 @@ public class ShipController : MonoBehaviour
             DesiredVelocity += Steering.Calculate();
         }
         GiveSquadLocation(BB.TargetPosition); //Set squad target positions.
-        ControlledShip.MoveToTarget(DesiredVelocity);
+        ControlledShip.MoveToTarget(DesiredVelocity.normalized);
 
     }
 
@@ -142,9 +163,10 @@ public class ShipController : MonoBehaviour
 
         foreach (ShipController SquadMember in Squads)
         {
-            
+            SquadMember.SetSteeringDesire(ShipController.SteeringDesires.Group, 1.0f);
             SquadMember.BB.TargetPosition = FP[Iterator].GetPos(); //Positions are offset on ship prefab.
-
+            //SquadMember.BB.TargetVelocity = ControlledShip.RB.velocity;
+            SquadMember.BB.TargetVelocity = Vector3.zero; 
             Iterator++;
         }
     }
@@ -157,5 +179,46 @@ public class ShipController : MonoBehaviour
     public void SetSteeringDesire(SteeringDesires Desire, float NewDes)
     {
         SteeringDesireFloats[(int)Desire] = Mathf.Clamp(NewDes,0.0f,1.0f);
+    }
+
+    public RadarMemoryRecord GetLastEnemyContact()
+    {
+        return Radar.GetLastEnemyContact();
+    }
+
+    public void SetBBTarget(ShipController SCIn)
+    {
+        BB.EnemyShip = SCIn.ControlledShip;
+        BB.TargetPosition = SCIn.transform.position;
+        BB.TargetVelocity = SCIn.ControlledShip.RB.velocity;
+    }
+
+    public void SetBBTarget(RadarMemoryRecord Radin)
+    {
+        BB.EnemyShip = Radin.ShipID;
+        BB.TargetPosition = Radin.LastSeenPosition;
+        BB.TargetVelocity = Radin.LastSeenVelocity;
+    }
+    public void SetBBTarget(Ship SP, Vector3 Pos, Vector3 Vel)
+    {
+        BB.EnemyShip = SP;
+        BB.TargetPosition = Pos;
+        BB.TargetVelocity = Vel;
+    }
+
+    public void SetBBTargetRadarOnly(RadarMemoryRecord Radin)
+    {
+        BB.EnemyShip = null;
+        BB.TargetPosition = Radin.LastSeenPosition;
+        BB.TargetVelocity = Radin.LastSeenVelocity;
+    }
+
+    public void UpdateBB()
+    {
+        if (BB.EnemyShip != null)
+        {
+            BB.TargetPosition = BB.EnemyShip.transform.position;
+            BB.TargetVelocity = BB.EnemyShip.RB.velocity;
+        }
     }
 }

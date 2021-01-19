@@ -18,7 +18,6 @@ public class ShipBlackBoard : MyBlackBoard
     public float Proximity;
 
     public int TeamID;
-    [HideInInspector]
     public Ship EnemyShip;
 
 }
