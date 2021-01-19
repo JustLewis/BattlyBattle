@@ -1,19 +1,20 @@
-﻿using JetBrains.Annotations;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+<<<<<<< HEAD
 using System.Runtime.InteropServices;
 //using UnityEditor.UI;
+=======
+>>>>>>> parent of 4302454... Lots of changes... Just not been backing up because idiot
 using UnityEngine;
-using UnityEngineInternal;
-using UnityEngine.AI;
-
 
 public class NodeController : MonoBehaviour
 {
     public static NodeController Instance;
     public GameObject node;
+    public int GridSize;
     public bool SpawnGrid;
+<<<<<<< HEAD
     public List<Node> NodeList = new List<Node>();
 
     public ComputeShader PathFindingComputeShader;
@@ -34,20 +35,37 @@ public class NodeController : MonoBehaviour
 
     public Node StartNode;
     public Node EndNode;
+=======
+    private List<Node> NodeList = new List<Node>();
+   
+>>>>>>> parent of 4302454... Lots of changes... Just not been backing up because idiot
 
     NavMeshTriangulation ActiveNavmesh;
 
     // Start is called before the first frame update
     void Start()
     {
+<<<<<<< HEAD
         ActiveNavmesh = NavMesh.CalculateTriangulation();
 
         DispatchCompute = false;
+=======
+>>>>>>> parent of 4302454... Lots of changes... Just not been backing up because idiot
         Instance = this;
         if (SpawnGrid)
         {
-            DoSpawn();
+            for (int i = 0; i < GridSize; i++)
+            {
+                for (int j = 0; j < GridSize; j++)
+                {
+                    GameObject Obj = Instantiate(node, transform, false);
+                    Obj.transform.position = new Vector3(i * 3, 0.5f, j * 3);
+                    GridNode ObjNode = Obj.GetComponent<GridNode>();
+                    ObjNode.NodePos = new Vector2Int(i, j);
+                }
+            }
         }
+<<<<<<< HEAD
 
     }
 
@@ -328,3 +346,13 @@ public class NodeController : MonoBehaviour
 //        PathFindingComputeShader.SetFloats("Direction", Positions);
 //    }
 //}
+=======
+        NodeList.AddRange(GetComponentsInChildren<Node>());
+        NodeList[5].Desire = float.MaxValue / 2;
+        NodeList[5].ShowDesire();
+
+    }
+
+    //todo Create a buffer to read and write to for the path finding.
+}
+>>>>>>> parent of 4302454... Lots of changes... Just not been backing up because idiot

@@ -11,7 +11,7 @@ public class GridNode : Node
 
     private void Start()
     {
-        //GridSize = NodeController.Instance.GridSize;
+        GridSize = NodeController.Instance.GridSize;
         Height = GetComponent<Transform>().position.y;
 
 

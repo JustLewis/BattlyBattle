@@ -1,14 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class Node : MonoBehaviour
 {
     public float Desire = float.MaxValue;
 
     public Vector3 Position;
+<<<<<<< HEAD
     public List<NodeEdge> AdjacentEdges = new List<NodeEdge>();
 
     public bool SetStart;
@@ -16,32 +15,17 @@ public class Node : MonoBehaviour
 
     private bool IsStart = false;
     private bool IsEnd = false;
+=======
+>>>>>>> parent of 4302454... Lots of changes... Just not been backing up because idiot
 
     private void Start()
     {
         Position = GetComponent<Transform>().position;
-        SetStart = false;
-        SetEnd = false;
-    }
-
-    private void Update()
-    {
-        if (SetStart)
-        {
-            SetAsStartPosition();
-            IsStart = true;
-            SetStart = false;
-        }
-        if (SetEnd)
-        {
-            SetAsEndPosition();
-            IsEnd = true;
-            SetEnd = false;
-        }
     }
 
     public void ShowDesire()
     {
+<<<<<<< HEAD
         if(Desire > 1.0f)
         {
             GetComponent<Renderer>().material.SetColor("_Color", Color.black);
@@ -77,25 +61,8 @@ public class Node : MonoBehaviour
         {
             TargetNode.Execute();
         }
+=======
+        GetComponent<Renderer>().material.SetColor("_Color", Color.white * (Desire / float.MaxValue));
+>>>>>>> parent of 4302454... Lots of changes... Just not been backing up because idiot
     }
-    static Node GetClosestLowScoringNode(Node CallingNode)
-    {
-        Node theNode = null;
-        float distance = 1000.0f;
-        float desire = 1000.0f;
-        foreach (Node node in NodeController.Instance.NodeList)
-        {
-            if (node == CallingNode) continue;
-            if ((node.Desire < desire) && (Vector3.Distance(node.Position, CallingNode.Position) < distance))
-            {
-                theNode = node;
-                desire = theNode.Desire;
-                distance = Vector3.Distance(CallingNode.Position, node.Position);
-            }
-        }
-        return theNode;
-    }
-
-
 }
-
